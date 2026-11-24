@@ -129,8 +129,8 @@ svg { flex: none; }
 .btn.quiet { height: 36px; font-size: 13px; padding: 0 12px; }
 .btn.raised { background: var(--hi); color: var(--fg); }
 .btn.raised:hover { background: #45403b; }
-.btn .swap { display: inline-grid; }
-.btn .swap > * { grid-area: 1 / 1; transition: opacity .35s var(--out), transform .45s var(--out); }
+.btn .swap { display: inline-grid; justify-items: center; }
+.btn .swap > * { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: 8px; transition: opacity .35s var(--out), transform .45s var(--out); }
 .btn .swap > :last-child { opacity: 0; transform: translateY(8px); }
 .btn.done .swap > :first-child { opacity: 0; transform: translateY(-8px); }
 .btn.done .swap > :last-child { opacity: 1; transform: none; }
@@ -537,8 +537,8 @@ body.entering .stage-bar, body.entering .browser, body.entering .panel { opacity
 .sheet .os { margin-top: 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .sheet .os h3, .share h3 { font-size: 15px; font-weight: 500; }
 .sheet .os .seg-ctl { width: 200px; }
-.how { list-style: none; counter-reset: how; margin-top: 12px; display: grid; gap: 14px; transition: opacity .3s var(--out); }
-.how li { counter-increment: how; position: relative; padding-left: 36px; font-size: 14px; line-height: 1.5; color: var(--soft); }
+.how { list-style: none; counter-reset: how; margin-top: 12px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; transition: opacity .3s var(--out); }
+.how li { counter-increment: how; position: relative; min-width: 0; padding-left: 36px; font-size: 14px; line-height: 1.5; color: var(--soft); }
 .how li::before {
   content: counter(how); position: absolute; left: 0; top: -1px; width: 24px; height: 24px; border-radius: 50%;
   display: grid; place-items: center; background: var(--bg); color: var(--fg); font-size: 12px;
@@ -550,9 +550,38 @@ body.entering .stage-bar, body.entering .browser, body.entering .panel { opacity
 }
 .code span { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
 .code span::-webkit-scrollbar { display: none; }
+.how .code { align-items: flex-start; }
+.how .code span { white-space: normal; overflow-wrap: anywhere; padding: 5px 0; }
+.share-code span { overflow: hidden; text-overflow: ellipsis; }
 .code .btn { height: 30px; padding: 0 10px; font: 12px var(--font); border-radius: 7px; background: var(--hi); color: var(--fg); }
 .share { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
 .share p { margin-top: 4px; }
+
+/* a coffee, if it helped */
+.tip {
+  position: relative; overflow: hidden; isolation: isolate; margin-top: 20px; padding: 16px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border-radius: 12px; background: var(--bg);
+}
+.tip::before {
+  content: ""; position: absolute; inset: -40% -10% auto auto; width: 70%; aspect-ratio: 1; z-index: -1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--c1) 22%, transparent), transparent);
+  opacity: .55; transition: opacity 1.2s var(--out), transform 1.2s var(--out);
+}
+.tip.lit::before { opacity: 1; transform: scale(1.15); }
+.cup { width: 40px; height: 40px; flex: none; border-radius: 10px; display: grid; place-items: center; background: var(--raised); color: var(--accent-hi); }
+.cup svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.cup .steam { opacity: 0; animation: steam 3.2s var(--out) infinite; }
+.cup .s2 { animation-delay: 1.1s; }
+@keyframes steam {
+  0% { opacity: 0; transform: translateY(3px); }
+  30% { opacity: .9; }
+  100% { opacity: 0; transform: translateY(-4px); }
+}
+.tip-t { flex: 1 1 240px; min-width: 0; }
+.tip-t h3 { font-size: 15px; font-weight: 500; }
+.tip-t p { margin-top: 2px; }
+.tip .btn { text-decoration: none; }
+@media (max-width: 600px) { .tip .btn { width: 100%; } }
 
 /* toast */
 .toast {

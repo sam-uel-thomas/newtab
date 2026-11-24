@@ -56,6 +56,9 @@ const iconHTML = (icon, name, cls = "") =>
   : `<span class="letter" aria-hidden="true">${esc((name || "?").trim().charAt(0) || "?")}</span>`;
 
 /* ── state: everything you choose, kept in this browser only ── */
+// where tips go; the coffee section in the download sheet only shows when this is set
+const TIP_URL = "https://ko-fi.com/sammartelthomas";
+
 const STORE = "newtab-builder";
 const fresh = () => ({
   v: 1, name: "", grain: .4, shortcuts: [], links: [], toolbar: true, focus: true, done: false,
@@ -811,6 +814,11 @@ function openSheet() {
   exGreeter.key = null; exGreeter.show(dayPart(false), S.name.trim(), false);
   $("#download").classList.remove("done");
   $("#shareUrl").textContent = shareLink();
+  const tip = $("#tip");
+  tip.hidden = !TIP_URL;
+  tip.classList.remove("lit");
+  $("#tipTitle").textContent = "Enjoying it?";
+  if (TIP_URL) $("#tipLink").href = TIP_URL;
   renderHow();
   setTimeout(() => $("#download").focus({ preventScroll: true }), 80);
 }
@@ -834,6 +842,15 @@ $("#download").addEventListener("click", () => {
   $("#download").classList.add("done");
   exGlow?.kick(1.2);
   toast("newtab.zip downloaded. Now run the installer");
+  // once they have it, the coffee warms up a little: a thank-you, never a nag
+  if (TIP_URL && !$("#tip").classList.contains("lit")) {
+    $("#tip").classList.add("lit");
+    const t = $("#tipTitle");
+    anim(t, [{ opacity: 1 }, { opacity: 0, transform: "translateY(-4px)" }], { duration: 200, easing: IN }).finished.then(() => {
+      t.textContent = "Thanks for downloading";
+      anim(t, [{ opacity: 0, transform: "translateY(4px)" }, { opacity: 1, transform: "none" }], { duration: 450, easing: OUT });
+    });
+  }
 });
 document.addEventListener("click", e => {
   const share = e.target.closest("[data-share]");

@@ -73,6 +73,10 @@ If you change `index.html`, anything in `firefox/` or the installers, run `pytho
 
 Brand icons from [Simple Icons](https://simpleicons.org) (CC0).
 
+## Support
+
+newtab is free, and it'll stay that way. If it made your browser a little calmer, you can [buy me a coffee on Ko-fi](https://ko-fi.com/sammartelthomas).
+
 ## License
 
 [MIT](LICENSE)
