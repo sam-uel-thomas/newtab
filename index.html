@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New Tab</title>
+<style>
+  :root {
+    /* ── Gradient colours: swap these to match your wallpaper ── */
+    --base: #1d1b19; /* warm charcoal — matches Firefox toolbar */
+    --c1: #f76203;   /* main orange       */
+    --c2: #ff9a40;   /* hot highlight     */
+    --c3: #e0400a;   /* red-orange edge   */
+    --grain: .4;     /* 0 = smooth, .7 = very grainy */
+
+    --fg: #f1eeea;
+    --muted: rgba(255,246,238,.78);
+    --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --ease: cubic-bezier(.2,.7,.2,1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--base); color: var(--fg); overflow: hidden; }
+  body { font-family: var(--font); -webkit-font-smoothing: antialiased; }
+
+  /* ── soft gradient: three blurred colour fields drifting slowly ── */
+  /* one big soft orb of light, like the wallpaper, breathing and drifting slowly */
+  .mesh { position: fixed; inset: 0; z-index: 0; filter: blur(48px); }
+  .mesh i { position: absolute; border-radius: 50%; }
+  /* the main orange body — a tall ellipse, cut off at the top */
+  .mesh i:nth-child(1) {
+    width: 78vw; height: 120vh; left: 8vw; top: -38vh;
+    background: var(--c1);
+    animation: orb 40s ease-in-out infinite alternate;
+  }
+  /* hot highlight, upper right */
+  .mesh i:nth-child(2) {
+    width: 42vw; height: 60vh; left: 42vw; top: -22vh;
+    background: var(--c2); opacity: .9;
+    animation: glint 26s ease-in-out infinite alternate;
+  }
+  /* deeper red-orange along the lower-left edge */
+  .mesh i:nth-child(3) {
+    width: 50vw; height: 55vh; left: 10vw; top: 38vh;
+    background: var(--c3); opacity: .75;
+    animation: ember 33s ease-in-out infinite alternate;
+  }
+
+  /* darken the edges a touch so text sits comfortably */
+  .vignette {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse 75% 80% at 50% 40%, transparent 50%, rgba(29,27,25,.6) 100%);
+  }
+
+  /* faint grid, fading towards the edges */
+  .grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 56px 56px; background-position: center;
+    -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 45%, #000 15%, transparent 100%);
+            mask-image: radial-gradient(ellipse 60% 60% at 50% 45%, #000 15%, transparent 100%);
+  }
+
+  /* film grain */
+  .grain {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    opacity: var(--grain); mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='3' intercept='-1'/%3E%3CfeFuncG type='linear' slope='3' intercept='-1'/%3E%3CfeFuncB type='linear' slope='3' intercept='-1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  main {
+    position: relative; z-index: 1; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0 24px; margin-top: -4vh;
+  }
+
+  /* staggered entrance */
+  .in { opacity: 0; animation: rise 1s var(--ease) forwards; }
+  .time  { animation-delay: .05s; }
+  h1     { animation-delay: .15s; animation-name: focusIn; animation-duration: 1.3s; }
+  form   { animation-delay: .3s; }
+  nav a  { opacity: 0; animation: rise .9s var(--ease) forwards; }
+  nav a:nth-child(1) { animation-delay: .45s; }
+  nav a:nth-child(2) { animation-delay: .5s; }
+  nav a:nth-child(3) { animation-delay: .55s; }
+  nav a:nth-child(4) { animation-delay: .6s; }
+
+  .time {
+    font-size: 15px; color: var(--muted); letter-spacing: .02em;
+    font-variant-numeric: tabular-nums; margin-bottom: 12px;
+  }
+  h1 { font-size: 40px; font-weight: 400; letter-spacing: -.02em; margin-bottom: 32px; text-align: center; }
+
+  form { width: min(560px, 100%); position: relative; z-index: 3; }
+  /* soft halo that blooms behind the search box when you click in */
+  form::before {
+    content: ""; position: absolute; inset: -30px -60px; z-index: -1; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(255,255,255,.10), transparent);
+    opacity: 0; transform: scale(.9); transition: opacity .6s var(--ease), transform .6s var(--ease);
+  }
+  form:focus-within::before { opacity: 1; transform: scale(1); }
+
+  /* search bar */
+  .bar {
+    position: relative; display: flex; align-items: center; gap: 8px;
+    height: 52px; padding: 0 12px 0 11px; box-sizing: border-box;
+    background: rgba(29,27,25,.45);
+    backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(255,255,255,.08); border-radius: 14px;
+    transition: border-color .3s, background .3s;
+  }
+  form:focus-within .bar { border-color: rgba(255,255,255,.18); background: rgba(29,27,25,.55); }
+  .field { position: relative; flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; }
+  input {
+    width: 100%; height: 100%; padding: 0 0 0 9px; background: none; border: 0; outline: 0;
+    color: var(--fg); font: 16px var(--font); caret-color: var(--fg);
+  }
+  .chip.on ~ .field input { padding-left: 2px; }
+  input::placeholder { color: var(--muted); }
+
+  /* shortcut chip */
+  .chip {
+    display: none; align-items: center; gap: 7px; flex: none;
+    height: 30px; padding: 0 10px 0 9px; border-radius: 8px;
+    background: rgba(255,246,238,.16); color: var(--fg); font-size: 15px;
+    transition: background .2s;
+  }
+  .chip.on { display: inline-flex; animation: pop .28s var(--ease); }
+  .chip.sel { background: rgba(255,246,238,.34); }
+  .chip svg, .ghost svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
+
+  /* inline preview after a typed shortcut */
+  .mirror { position: absolute; visibility: hidden; white-space: pre; font: 16px var(--font); }
+  .ghost {
+    position: absolute; top: 50%; transform: translateY(-50%); display: none; align-items: center; gap: 6px;
+    color: var(--muted); font-size: 16px; white-space: nowrap; pointer-events: none;
+  }
+  .ghost.on { display: inline-flex; animation: fade .2s var(--ease); }
+
+  /* key hints on the right */
+  .keys { display: flex; align-items: center; gap: 6px; flex: none; font-size: 12px; color: var(--muted); }
+  .key {
+    display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 5px;
+    background: rgba(255,246,238,.12); color: var(--muted); font-size: 12px;
+  }
+
+  /* matching shortcuts list */
+  .list {
+    position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 5;
+    display: none; flex-direction: column; gap: 2px; padding: 6px; border-radius: 14px;
+    background: rgba(29,27,25,.72);
+    backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+  .list.on { display: flex; animation: drop .2s var(--ease); }
+  nav { transition: opacity .2s; }
+  form:has(.list.on) + nav { opacity: 0; pointer-events: none; }
+  .row {
+    display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 10px; border-radius: 8px;
+    font-size: 14px; color: var(--fg); cursor: pointer; transition: background .15s;
+  }
+  .row.sel, .row:hover { background: rgba(255,246,238,.12); }
+  .row .ico {
+    width: 26px; height: 26px; border-radius: 7px; background: rgba(255,246,238,.16);
+    display: flex; align-items: center; justify-content: center; flex: none;
+  }
+  .row .ico svg { width: 15px; height: 15px; fill: currentColor; }
+  .row .sub { color: var(--muted); font-size: 13px; }
+  .row .key { margin-left: auto; }
+
+  @keyframes pop  { from { opacity: 0; transform: scale(.85); } }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes drop { from { opacity: 0; transform: translateY(-4px); } }
+
+  nav { display: flex; gap: 28px; margin-top: 30px; position: relative; z-index: 1; }
+  nav a {
+    position: relative; color: var(--muted); text-decoration: none; font-size: 13px;
+    transition: color .3s;
+  }
+  nav a::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 1px; background: currentColor;
+    transform: scaleX(0); transform-origin: left; transition: transform .4s var(--ease);
+  }
+  nav a:hover { color: var(--fg); }
+  nav a:hover::after { transform: scaleX(1); }
+
+  @keyframes rise    { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes focusIn { from { opacity: 0; filter: blur(8px); transform: translateY(6px); } to { opacity: 1; filter: none; transform: none; } }
+  @keyframes orb {
+    0%   { transform: translate(0, 0) rotate(-8deg) scale(1); }
+    50%  { transform: translate(3vw, 2vh) rotate(-4deg) scale(1.04); }
+    100% { transform: translate(-2vw, 4vh) rotate(-10deg) scale(.98); }
+  }
+  @keyframes glint {
+    0%   { transform: translate(0, 0) scale(1); opacity: .9; }
+    100% { transform: translate(-6vw, 4vh) scale(1.1); opacity: .7; }
+  }
+  @keyframes ember {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(5vw, -3vh) scale(1.08); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="mesh"><i></i><i></i><i></i></div>
+<div class="vignette"></div>
+<div class="grid"></div>
+<div class="grain"></div>
+
+<main>
+  <div class="time in" id="time"></div>
+  <h1 class="in" id="greet"></h1>
+  <form class="in" id="f" autocomplete="off" action="https://www.google.com/search" method="get">
+    <div class="bar">
+      <span class="chip" id="chip"></span>
+      <div class="field">
+        <input id="q" name="q" type="text" placeholder="Search" autofocus spellcheck="false" aria-label="Search">
+        <span class="mirror" id="mirror" aria-hidden="true"></span>
+        <span class="ghost" id="ghost" aria-hidden="true"></span>
+      </div>
+      <div class="keys" id="keys"></div>
+    </div>
+    <div class="list" id="list" role="listbox"></div>
+  </form>
+  <nav>
+    <a href="https://drive.google.com">Drive</a>
+    <a href="https://github.com">GitHub</a>
+    <a href="https://mail.google.com">Gmail</a>
+    <a href="https://youtube.com">YouTube</a>
+  </nav>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const NAME = "Sam";
+
+function greeting(d) {
+  const h = d.getHours(), day = d.getDay(), weekend = day === 0 || day === 6;
+  if (h >= 5  && h < 12) return weekend ? `Slow morning, ${NAME}` : `Good morning, ${NAME}`;
+  if (h >= 12 && h < 17) return `Good afternoon, ${NAME}`;
+  if (h >= 17 && h < 22) return `Good evening, ${NAME}`;
+  if (h >= 22 || h < 2)  return `Working late, ${NAME}?`;
+  return `Still up, ${NAME}?`;           // 2am–5am
+}
+
+function tick() {
+  const d = new Date();
+  $("time").textContent = d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
+    + "  ·  " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const g = greeting(d);
+  if ($("greet").textContent !== g) $("greet").textContent = g;
+}
+tick(); setInterval(tick, 5000);
+
+// ── Search shortcuts: type a shortcut, press Space or Tab, it becomes a chip ──
+const ICONS = {"yt": "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z", "gh": "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12", "m": "M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z", "d": "M12.01 1.485c-2.082 0-3.754.02-3.743.047.01.02 1.708 3.001 3.774 6.62l3.76 6.574h3.76c2.081 0 3.753-.02 3.742-.047-.005-.02-1.708-3.001-3.775-6.62l-3.76-6.574zm-4.76 1.73a789.828 789.861 0 0 0-3.63 6.319L0 15.868l1.89 3.298 1.885 3.297 3.62-6.335 3.618-6.33-1.88-3.287C8.1 4.704 7.255 3.22 7.25 3.214zm2.259 12.653-.203.348c-.114.198-.96 1.672-1.88 3.287a423.93 423.948 0 0 1-1.698 2.97c-.01.026 3.24.042 7.222.042h7.244l1.796-3.157c.992-1.734 1.85-3.23 1.906-3.323l.104-.167h-7.249z", "w": "M12.09 13.119c-.936 1.932-2.217 4.548-2.853 5.728-.616 1.074-1.127.931-1.532.029-1.406-3.321-4.293-9.144-5.651-12.409-.251-.601-.441-.987-.619-1.139-.181-.15-.554-.24-1.122-.271C.103 5.033 0 4.982 0 4.898v-.455l.052-.045c.924-.005 5.401 0 5.401 0l.051.045v.434c0 .119-.075.176-.225.176l-.564.031c-.485.029-.727.164-.727.436 0 .135.053.33.166.601 1.082 2.646 4.818 10.521 4.818 10.521l.136.046 2.411-4.81-.482-1.067-1.658-3.264s-.318-.654-.428-.872c-.728-1.443-.712-1.518-1.447-1.617-.207-.023-.313-.05-.313-.149v-.468l.06-.045h4.292l.113.037v.451c0 .105-.076.15-.227.15l-.308.047c-.792.061-.661.381-.136 1.422l1.582 3.252 1.758-3.504c.293-.64.233-.801.111-.947-.07-.084-.305-.22-.812-.24l-.201-.021c-.052 0-.098-.015-.145-.051-.045-.031-.067-.076-.067-.129v-.427l.061-.045c1.247-.008 4.043 0 4.043 0l.059.045v.436c0 .121-.059.178-.193.178-.646.03-.782.095-1.023.439-.12.186-.375.589-.646 1.039l-2.301 4.273-.065.135 2.792 5.712.17.048 4.396-10.438c.154-.422.129-.722-.064-.895-.197-.172-.346-.273-.857-.295l-.42-.016c-.061 0-.105-.014-.152-.045-.043-.029-.072-.075-.072-.119v-.436l.059-.045h4.961l.041.045v.437c0 .119-.074.18-.209.18-.648.03-1.127.18-1.443.421-.314.255-.557.616-.736 1.067 0 0-4.043 9.258-5.426 12.339-.525 1.007-1.053.917-1.503-.031-.571-1.171-1.773-3.786-2.646-5.71l.053-.036z"};
+const engines = {
+  gh: { name: "GitHub",    sub: "Search repos and code", home: "https://github.com",          url: q => "https://github.com/search?q=" + q },
+  yt: { name: "YouTube",   sub: "Search videos",         home: "https://www.youtube.com",     url: q => "https://www.youtube.com/results?search_query=" + q },
+  m:  { name: "Gmail",     sub: "Search your inbox",     home: "https://mail.google.com",     url: q => "https://mail.google.com/mail/u/0/#search/" + q },
+  d:  { name: "Drive",     sub: "Search Google Drive",   home: "https://drive.google.com",    url: q => "https://drive.google.com/drive/search?q=" + q, alias: "google drive" },
+  w:  { name: "Wikipedia", sub: "Search articles",       home: "https://en.wikipedia.org",    url: q => "https://en.wikipedia.org/w/index.php?search=" + q },
+};
+const svg = k => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[k]}"/></svg>`;
+const keyCap = t => `<span class="key">${t}</span>`;
+const isUrl = v => /^(https?:\/\/|localhost(:\d+)?)/i.test(v) || /^[^\s]+\.[a-z]{2,}(\/.*)?$/i.test(v);
+
+const q = $("q"), chip = $("chip"), ghost = $("ghost"), mirror = $("mirror"), list = $("list"), keys = $("keys");
+let mode = null, chipSel = false, matches = [], idx = 0, arrowed = false;
+
+function setMode(k) {
+  mode = k; chipSel = false; arrowed = false;
+  chip.innerHTML = svg(k) + engines[k].name;
+  chip.className = "chip on";
+  q.placeholder = "Search " + engines[k].name;
+  update(); q.focus();
+}
+function clearMode() { mode = null; chipSel = false; chip.className = "chip"; q.placeholder = "Search"; }
+
+function findMatches(v) {
+  v = v.toLowerCase();
+  if (!v || v.length > 3 || /\s/.test(v)) return [];
+  return Object.keys(engines).filter(k => {
+    const e = engines[k];
+    return k.startsWith(v) || e.name.toLowerCase().startsWith(v) || (e.alias || "").split(" ").some(w => w.startsWith(v));
+  });
+}
+
+function update() {
+  const v = q.value;
+  const exact = !mode && engines[v.toLowerCase()] ? v.toLowerCase() : null;
+
+  // inline preview: "yt → [icon] YouTube"
+  if (exact) {
+    mirror.textContent = v;
+    ghost.style.left = (parseFloat(getComputedStyle(q).paddingLeft) + mirror.offsetWidth + 8) + "px";
+    ghost.innerHTML = "→ " + svg(exact) + engines[exact].name;
+    ghost.classList.add("on");
+  } else ghost.classList.remove("on");
+
+  // matching list (Raycast-style), only when no exact shortcut
+  matches = !mode && !exact ? findMatches(v) : [];
+  if (matches.length) {
+    idx = Math.min(idx, matches.length - 1);
+    list.innerHTML = matches.map((k, i) =>
+      `<div class="row${i === idx ? " sel" : ""}" role="option" data-k="${k}"><span class="ico">${svg(k)}</span>${engines[k].name}<span class="sub">${engines[k].sub}</span>${keyCap(k)}</div>`).join("");
+    list.classList.add("on");
+  } else { list.classList.remove("on"); idx = 0; arrowed = false; }
+
+  // right-hand hints
+  keys.innerHTML =
+    chipSel ? "⌫ again to remove" :
+    exact ? keyCap("Space") + keyCap("Tab") :
+    matches.length ? keyCap("↑↓") + keyCap("Tab") :
+    mode && v ? "Search " + keyCap("↵") : "";
+}
+
+q.addEventListener("input", () => {
+  chipSel = false; chip.classList.remove("sel");
+  if (!mode) {
+    const m = q.value.match(/^(\w+)\s(.*)$/s);            // "yt " or a pasted "yt lofi"
+    if (m && engines[m[1].toLowerCase()]) { q.value = m[2]; setMode(m[1].toLowerCase()); return; }
+  }
+  update();
+});
+
+q.addEventListener("keydown", e => {
+  const exact = !mode && engines[q.value.toLowerCase()] ? q.value.toLowerCase() : null;
+  if (e.key === "Tab" && !e.shiftKey) {
+    if (exact) { e.preventDefault(); q.value = ""; setMode(exact); }
+    else if (matches.length) { e.preventDefault(); q.value = ""; setMode(matches[idx]); }
+  } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && matches.length) {
+    e.preventDefault(); arrowed = true;
+    idx = (idx + (e.key === "ArrowDown" ? 1 : -1) + matches.length) % matches.length; update();
+  } else if (e.key === "Enter" && matches.length && arrowed) {
+    e.preventDefault(); q.value = ""; setMode(matches[idx]);
+  } else if (e.key === "Backspace" && mode && !q.value) {
+    e.preventDefault();
+    if (chipSel) { clearMode(); update(); }
+    else { chipSel = true; chip.classList.add("sel"); update(); }
+  } else if (e.key === "Escape") {
+    q.value = ""; clearMode(); update();
+  }
+});
+
+list.addEventListener("mousedown", e => e.preventDefault());       // keep focus in the input
+list.addEventListener("click", e => {
+  const row = e.target.closest(".row"); if (!row) return;
+  q.value = ""; setMode(row.dataset.k);
+});
+q.addEventListener("blur", () => list.classList.remove("on"));
+q.addEventListener("focus", update);
+// when Firefox hands focus to the page (new tab, switching back), put the cursor in search
+addEventListener("focus", () => { if (document.activeElement !== q) q.focus(); });
+
+$("f").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = q.value.trim();
+  if (mode) return location.href = v ? engines[mode].url(encodeURIComponent(v)) : engines[mode].home;
+  if (!v) return;
+  if (isUrl(v)) return location.href = /^https?:\/\//i.test(v) ? v : "https://" + v;
+  location.href = "https://www.google.com/search?q=" + encodeURIComponent(v);
+});
+
+// ⌥1–4 opens the links, / focuses search
+const links = [...document.querySelectorAll("nav a")];
+addEventListener("keydown", e => {
+  if (e.altKey && /^Digit[1-4]$/.test(e.code)) { e.preventDefault(); location.href = links[+e.code.slice(5) - 1].href; }
+  if (e.key === "/" && document.activeElement !== $("q")) { e.preventDefault(); $("q").focus(); }
+});
+</script>
+</body>
+</html>

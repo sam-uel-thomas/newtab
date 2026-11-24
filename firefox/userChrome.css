@@ -1,0 +1,78 @@
+/* ─────────────────────────────────────────────────────────────
+   Firefox toolbar restyle — warm charcoal, 8pt grid, tidied tabs
+   Lives in <profile>/chrome/userChrome.css
+   Needs toolkit.legacyUserProfileCustomizations.stylesheets = true (see user.js)
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --sam-base:   #1d1b19;  /* toolbar + new tab page edges */
+  --sam-raised: #282522;  /* address bar, selected tab */
+  --sam-hover:  #302c29;
+  --sam-text:   #ece8e3;
+  --sam-align:  0px;      /* nudge the address bar to line up with the first tab */
+  --sam-fs-pad: 12px;     /* tab inset from the screen edge in full screen */
+
+  --lwt-accent-color: var(--sam-base) !important;
+  --lwt-inactive-accent-color: var(--sam-base) !important;
+  --toolbar-bgcolor: var(--sam-base) !important;
+  --toolbar-color: var(--sam-text) !important;
+  --toolbar-field-background-color: var(--sam-raised) !important;
+  --toolbar-field-focus-background-color: var(--sam-hover) !important;
+  --toolbar-field-color: var(--sam-text) !important;
+  --toolbar-field-border-color: transparent !important;
+  --toolbar-field-focus-border-color: transparent !important;
+  --tab-selected-bgcolor: var(--sam-raised) !important;
+  --tab-selected-outline-color: transparent !important;
+  --chrome-content-separator-color: transparent !important;
+
+  --tab-min-height: 28px !important;
+  --tab-border-radius: 8px !important;
+  --toolbarbutton-border-radius: 7px !important;
+  --toolbarbutton-inner-padding: 6px !important;   /* 16px icon → 28px button */
+  --urlbar-min-height: 32px !important;
+}
+
+#navigator-toolbox, #TabsToolbar, #nav-bar, #PersonalToolbar {
+  background-color: var(--sam-base) !important;
+  border: none !important;
+}
+
+/* tabs: rounded rectangles, close button only on the active tab */
+.tab-background {
+  border-radius: 8px !important; margin-block: 8px !important;
+  outline: none !important; box-shadow: none !important; border: none !important;
+}
+.tab-background[selected] { background: var(--sam-raised) !important; }
+.tab-content { padding-inline: 8px 6px !important; }
+.tab-icon-image, .tab-icon-stack { margin-inline-end: 8px !important; }
+.tabbrowser-tab:not([selected]) .tab-close-button { display: none !important; }
+
+/* new-tab button snaps back immediately after closing a tab */
+.closing-tabs-spacer { display: none !important; }
+
+/* full screen: no window buttons, so inset the tabs from the edge */
+:root[sizemode="fullscreen"] #TabsToolbar,
+:root[inFullscreen] #TabsToolbar { padding-inline-start: var(--sam-fs-pad) !important; }
+
+/* toolbar: 8pt grid, no reload/stop button */
+#nav-bar { padding: 0 8px 8px 12px !important; }
+#reload-button, #stop-button, #stop-reload-button { display: none !important; }
+#urlbar-container { margin-inline-start: calc(8px + var(--sam-align)) !important; margin-inline-end: 8px !important; }
+#urlbar-background { border-radius: 10px !important; border: none !important; box-shadow: none !important; }
+#urlbar[focused] #urlbar-background { background: var(--sam-hover) !important; }
+#urlbar-input-container { padding-inline-start: 12px !important; }
+
+/* remove the search engine (Google) dropdown — every name Firefox has used for it */
+#urlbar-searchmode-switcher,
+#searchmode-switcher-chicklet,
+#searchmode-switcher-icon,
+#searchmode-switcher-dropmarker,
+[id^="urlbar-searchmode-switcher"],
+[class*="searchmode-switcher"],
+#urlbar .search-one-offs-button,
+#urlbar-search-mode-indicator,
+#urlbar-search-button { display: none !important; }
+
+/* bookmark shortcuts in the toolbar: monochrome until hover */
+#nav-bar .bookmark-item .toolbarbutton-icon { filter: grayscale(1) opacity(.7); transition: filter .2s; }
+#nav-bar .bookmark-item:hover .toolbarbutton-icon { filter: none; }
