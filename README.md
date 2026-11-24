@@ -56,4 +56,8 @@ The installer:
 - Shortcuts: the `engines` list in `index.html`
 - Toolbar alignment: `--sam-align` and `--sam-fs-pad` at the top of `userChrome.css`
 
+## Showcase video
+
+`showcase/` is the Remotion project for the 32-second showcase film, cut to the music. See [showcase/README.md](showcase/README.md).
+
 Brand icons from [Simple Icons](https://simpleicons.org) (CC0).

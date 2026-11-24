@@ -1,0 +1,20 @@
+{
+  "name": "newtab-showcase",
+  "version": "1.0.0",
+  "description": "Remotion showcase video for the newtab page, synced to the music",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts NewTab out/video.mp4 --codec=h264 --crf=18",
+    "audio": "python3 audio/analyse_beats.py && python3 audio/make_sfx.py && bash audio/mix.sh",
+    "build": "npm run render && npm run audio && bash audio/mux.sh"
+  },
+  "author": "Sam Thomas",
+  "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@remotion/cli": "^4.0.546",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.546"
+  },
+  "private": true
+}
