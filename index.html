@@ -4,10 +4,46 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>New Tab</title>
-<script>if (location.hash === "#private") document.documentElement.classList.add("private");</script>
+<script>
+/* newtab-config:start — your settings. The builder writes this block; you can also edit it by hand.
+   shortcuts: type `key` then Space to search that site. `search` has %s where the search goes.
+   icon: a built-in icon name (gh yt m d w map), a data:image/png URL, or leave it out for a letter. */
+const NEWTAB = {
+  "name": "Sam",
+  "glow": {
+    "normal": ["#f76203", "#ff9a40", "#e0400a"],
+    "private": ["#263f8c", "#4e6cb8", "#1a2768"]
+  },
+  "grain": 0.4,
+  "shortcuts": [
+    { "key": "gh", "name": "GitHub", "sub": "Search repos and code", "home": "https://github.com", "search": "https://github.com/search?q=%s", "icon": "gh" },
+    { "key": "yt", "name": "YouTube", "sub": "Search videos", "home": "https://www.youtube.com", "search": "https://www.youtube.com/results?search_query=%s", "icon": "yt" },
+    { "key": "m", "name": "Gmail", "sub": "Search your inbox", "home": "https://mail.google.com", "search": "https://mail.google.com/mail/u/0/#search/%s", "icon": "m" },
+    { "key": "d", "name": "Drive", "sub": "Search Google Drive", "home": "https://drive.google.com", "search": "https://drive.google.com/drive/search?q=%s", "icon": "d", "alias": "google drive" },
+    { "key": "w", "name": "Wikipedia", "sub": "Search articles", "home": "https://en.wikipedia.org", "search": "https://en.wikipedia.org/w/index.php?search=%s", "icon": "w" }
+  ],
+  "links": [
+    { "name": "Drive", "url": "https://drive.google.com" },
+    { "name": "GitHub", "url": "https://github.com" },
+    { "name": "Gmail", "url": "https://mail.google.com" },
+    { "name": "YouTube", "url": "https://youtube.com" }
+  ]
+};
+/* newtab-config:end */
+
+// private windows open this page as index.html#private and get their own glow
+let PRIVATE = location.hash === "#private" || !!window.NEWTAB_PREVIEW_PRIVATE;
+function applyTheme() {
+  const root = document.documentElement, g = NEWTAB.glow[PRIVATE ? "private" : "normal"];
+  root.classList.toggle("private", PRIVATE);
+  ["--c1", "--c2", "--c3"].forEach((k, i) => root.style.setProperty(k, g[i]));
+  root.style.setProperty("--grain", NEWTAB.grain);
+}
+applyTheme();
+</script>
 <style>
   :root {
-    /* ── Gradient colours: swap these to match your wallpaper ── */
+    /* fallback colours: the glow is set in NEWTAB at the top */
     --base: #1d1b19; /* warm charcoal — matches Firefox toolbar */
     --c1: #f76203;   /* main orange       */
     --c2: #ff9a40;   /* hot highlight     */
@@ -18,12 +54,6 @@
     --muted: rgba(255,246,238,.78);
     --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
     --ease: cubic-bezier(.2,.7,.2,1);
-  }
-  /* private windows: same page, dusky night-time glow */
-  :root.private {
-    --c1: #263f8c;
-    --c2: #4e6cb8;
-    --c3: #1a2768;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: var(--base); color: var(--fg); overflow: hidden; }
@@ -88,10 +118,6 @@
   h1     { animation-delay: .15s; animation-name: focusIn; animation-duration: 1.3s; }
   form   { animation-delay: .3s; }
   nav a  { opacity: 0; animation: rise .9s var(--ease) forwards; }
-  nav a:nth-child(1) { animation-delay: .45s; }
-  nav a:nth-child(2) { animation-delay: .5s; }
-  nav a:nth-child(3) { animation-delay: .55s; }
-  nav a:nth-child(4) { animation-delay: .6s; }
 
   .time {
     font-size: 15px; color: var(--muted); letter-spacing: .02em;
@@ -135,7 +161,12 @@
   }
   .chip.on { display: inline-flex; animation: pop .28s var(--ease); }
   .chip.sel { background: rgba(255,246,238,.34); }
-  .chip svg, .ghost svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
+  .chip svg, .ghost svg, .chip img, .ghost img { width: 14px; height: 14px; fill: currentColor; flex: none; }
+  .chip img, .ghost img, .row .ico img { object-fit: contain; border-radius: 3px; }
+  .letter {
+    width: 14px; height: 14px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 500; line-height: 1; text-transform: uppercase;
+  }
 
   /* inline preview after a typed shortcut */
   .mirror { position: absolute; visibility: hidden; white-space: pre; font: 16px var(--font); }
@@ -171,7 +202,7 @@
     width: 26px; height: 26px; border-radius: 7px; background: rgba(255,246,238,.16);
     display: flex; align-items: center; justify-content: center; flex: none;
   }
-  .row .ico svg { width: 15px; height: 15px; fill: currentColor; }
+  .row .ico svg, .row .ico img { width: 15px; height: 15px; fill: currentColor; }
   .row .sub { color: var(--muted); font-size: 13px; }
   .row .key { margin-left: auto; }
 
@@ -179,7 +210,8 @@
   @keyframes fade { from { opacity: 0; } }
   @keyframes drop { from { opacity: 0; transform: translateY(-4px); } }
 
-  nav { display: flex; gap: 28px; margin-top: 30px; position: relative; z-index: 1; }
+  nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; margin-top: 30px; position: relative; z-index: 1; }
+  nav:empty { display: none; }
   nav a {
     position: relative; color: var(--muted); text-decoration: none; font-size: 13px;
     transition: color .3s;
@@ -225,11 +257,7 @@
   h1 .w { display: inline-block; overflow: hidden; vertical-align: top; padding: .14em .03em; margin: -.14em -.03em; }
   h1 .w > span { display: inline-block; transform: translateY(112%); animation: wordUp .82s var(--out) forwards; animation-delay: calc(.1s + var(--n) * .052s); }
   form.in { animation: barIn .86s var(--out) .2s forwards; }
-  nav a { animation: settle .72s var(--out) forwards; }
-  nav a:nth-child(1) { animation-delay: .38s; }
-  nav a:nth-child(2) { animation-delay: .42s; }
-  nav a:nth-child(3) { animation-delay: .46s; }
-  nav a:nth-child(4) { animation-delay: .5s; }
+  nav a { animation: settle .72s var(--out) forwards; animation-delay: calc(.38s + var(--i, 0) * .04s); }
   @keyframes settle { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
   @keyframes wordUp { to { transform: none; } }
   @keyframes barIn  { from { opacity: 0; transform: translateY(10px) scaleX(.965); } to { opacity: 1; transform: none; } }
@@ -314,29 +342,23 @@
     </div>
     <div class="list" id="list" role="listbox"></div>
   </form>
-  <nav>
-    <a href="https://drive.google.com">Drive</a>
-    <a href="https://github.com">GitHub</a>
-    <a href="https://mail.google.com">Gmail</a>
-    <a href="https://youtube.com">YouTube</a>
-  </nav>
+  <nav id="links"></nav>
 </main>
 
 <script>
 const $ = id => document.getElementById(id);
-const NAME = "Sam";
-const PRIVATE = location.hash === "#private";
-const SNEAKY = [`Being sneaky, ${NAME}?`, "Shhhh, this is all private"];
-const sneaky = SNEAKY[Math.floor(Math.random() * SNEAKY.length)];   // picked once per tab
+const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const named = (s, end = "") => (NEWTAB.name || "").trim() ? `${s}, ${NEWTAB.name.trim()}${end}` : s + end;
+const sneakyPick = Math.random();                                      // picked once per tab
 
 function greeting(d) {
-  if (PRIVATE) return sneaky;
+  if (PRIVATE) { const s = [named("Being sneaky", "?"), "Shhhh, this is all private"]; return s[Math.floor(sneakyPick * s.length)]; }
   const h = d.getHours(), day = d.getDay(), weekend = day === 0 || day === 6;
-  if (h >= 5  && h < 12) return weekend ? `Slow morning, ${NAME}` : `Good morning, ${NAME}`;
-  if (h >= 12 && h < 17) return `Good afternoon, ${NAME}`;
-  if (h >= 17 && h < 22) return `Good evening, ${NAME}`;
-  if (h >= 22 || h < 2)  return `Working late, ${NAME}?`;
-  return `Still up, ${NAME}?`;           // 2am–5am
+  if (h >= 5  && h < 12) return named(weekend ? "Slow morning" : "Good morning");
+  if (h >= 12 && h < 17) return named("Good afternoon");
+  if (h >= 17 && h < 22) return named("Good evening");
+  if (h >= 22 || h < 2)  return named("Working late", "?");
+  return named("Still up", "?");           // 2am–5am
 }
 
 function tick() {
@@ -350,14 +372,28 @@ tick(); setInterval(tick, 5000);
 
 // ── Search shortcuts: type a shortcut, press Space or Tab, it becomes a chip ──
 const ICONS = {"yt": "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z", "gh": "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12", "m": "M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z", "d": "M12.01 1.485c-2.082 0-3.754.02-3.743.047.01.02 1.708 3.001 3.774 6.62l3.76 6.574h3.76c2.081 0 3.753-.02 3.742-.047-.005-.02-1.708-3.001-3.775-6.62l-3.76-6.574zm-4.76 1.73a789.828 789.861 0 0 0-3.63 6.319L0 15.868l1.89 3.298 1.885 3.297 3.62-6.335 3.618-6.33-1.88-3.287C8.1 4.704 7.255 3.22 7.25 3.214zm2.259 12.653-.203.348c-.114.198-.96 1.672-1.88 3.287a423.93 423.948 0 0 1-1.698 2.97c-.01.026 3.24.042 7.222.042h7.244l1.796-3.157c.992-1.734 1.85-3.23 1.906-3.323l.104-.167h-7.249z", "w": "M12.09 13.119c-.936 1.932-2.217 4.548-2.853 5.728-.616 1.074-1.127.931-1.532.029-1.406-3.321-4.293-9.144-5.651-12.409-.251-.601-.441-.987-.619-1.139-.181-.15-.554-.24-1.122-.271C.103 5.033 0 4.982 0 4.898v-.455l.052-.045c.924-.005 5.401 0 5.401 0l.051.045v.434c0 .119-.075.176-.225.176l-.564.031c-.485.029-.727.164-.727.436 0 .135.053.33.166.601 1.082 2.646 4.818 10.521 4.818 10.521l.136.046 2.411-4.81-.482-1.067-1.658-3.264s-.318-.654-.428-.872c-.728-1.443-.712-1.518-1.447-1.617-.207-.023-.313-.05-.313-.149v-.468l.06-.045h4.292l.113.037v.451c0 .105-.076.15-.227.15l-.308.047c-.792.061-.661.381-.136 1.422l1.582 3.252 1.758-3.504c.293-.64.233-.801.111-.947-.07-.084-.305-.22-.812-.24l-.201-.021c-.052 0-.098-.015-.145-.051-.045-.031-.067-.076-.067-.129v-.427l.061-.045c1.247-.008 4.043 0 4.043 0l.059.045v.436c0 .121-.059.178-.193.178-.646.03-.782.095-1.023.439-.12.186-.375.589-.646 1.039l-2.301 4.273-.065.135 2.792 5.712.17.048 4.396-10.438c.154-.422.129-.722-.064-.895-.197-.172-.346-.273-.857-.295l-.42-.016c-.061 0-.105-.014-.152-.045-.043-.029-.072-.075-.072-.119v-.436l.059-.045h4.961l.041.045v.437c0 .119-.074.18-.209.18-.648.03-1.127.18-1.443.421-.314.255-.557.616-.736 1.067 0 0-4.043 9.258-5.426 12.339-.525 1.007-1.053.917-1.503-.031-.571-1.171-1.773-3.786-2.646-5.71l.053-.036z"};
-const engines = {
-  gh: { name: "GitHub",    sub: "Search repos and code", home: "https://github.com",          url: q => "https://github.com/search?q=" + q },
-  yt: { name: "YouTube",   sub: "Search videos",         home: "https://www.youtube.com",     url: q => "https://www.youtube.com/results?search_query=" + q },
-  m:  { name: "Gmail",     sub: "Search your inbox",     home: "https://mail.google.com",     url: q => "https://mail.google.com/mail/u/0/#search/" + q },
-  d:  { name: "Drive",     sub: "Search Google Drive",   home: "https://drive.google.com",    url: q => "https://drive.google.com/drive/search?q=" + q, alias: "google drive" },
-  w:  { name: "Wikipedia", sub: "Search articles",       home: "https://en.wikipedia.org",    url: q => "https://en.wikipedia.org/w/index.php?search=" + q },
+ICONS.map = "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z";
+const origin = u => { try { return new URL(u.replace("%s", "")).origin; } catch { return u; } };
+let engines = {};
+function buildEngines() {
+  engines = {};
+  for (const s of NEWTAB.shortcuts || []) {
+    const key = String(s.key || "").toLowerCase().trim();
+    if (!key || !s.search) continue;
+    engines[key] = {
+      name: s.name || key, sub: s.sub || "Search " + (s.name || key), icon: s.icon, alias: s.alias,
+      home: s.home || origin(s.search),
+      url: q => s.search.replace("%s", q)
+    };
+  }
+}
+buildEngines();
+const svg = k => {
+  const e = engines[k], i = e && e.icon;
+  if (i && ICONS[i]) return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[i]}"/></svg>`;
+  if (i && /^data:image\/(png|jpeg|gif|webp);/.test(i)) return `<img src="${esc(i)}" alt="">`;
+  return `<span class="letter" aria-hidden="true">${esc((e ? e.name : k).charAt(0))}</span>`;
 };
-const svg = k => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[k]}"/></svg>`;
 const keyCap = t => `<span class="key">${t}</span>`;
 const isUrl = v => /^(https?:\/\/|localhost(:\d+)?)/i.test(v) || /^[^\s]+\.[a-z]{2,}(\/.*)?$/i.test(v);
 
@@ -366,7 +402,7 @@ let mode = null, chipSel = false, matches = [], idx = 0, arrowed = false;
 
 function setMode(k) {
   mode = k; chipSel = false; arrowed = false;
-  chip.innerHTML = svg(k) + engines[k].name;
+  chip.innerHTML = svg(k) + esc(engines[k].name);
   chip.className = "chip on";
   q.placeholder = "Search " + engines[k].name;
   update(); q.focus();
@@ -390,7 +426,7 @@ function update() {
   if (exact) {
     mirror.textContent = v;
     ghost.style.left = (parseFloat(getComputedStyle(q).paddingLeft) + mirror.offsetWidth + 8) + "px";
-    ghost.innerHTML = "→ " + svg(exact) + engines[exact].name;
+    ghost.innerHTML = "→ " + svg(exact) + esc(engines[exact].name);
     ghost.classList.add("on");
   } else ghost.classList.remove("on");
 
@@ -399,7 +435,7 @@ function update() {
   if (matches.length) {
     idx = Math.min(idx, matches.length - 1);
     list.innerHTML = matches.map((k, i) =>
-      `<div class="row${i === idx ? " sel" : ""}" role="option" data-k="${k}"><span class="ico">${svg(k)}</span>${engines[k].name}<span class="sub">${engines[k].sub}</span>${keyCap(k)}</div>`).join("");
+      `<div class="row${i === idx ? " sel" : ""}" role="option" data-k="${esc(k)}"><span class="ico">${svg(k)}</span>${esc(engines[k].name)}<span class="sub">${esc(engines[k].sub)}</span>${keyCap(esc(k))}</div>`).join("");
     list.classList.add("on");
   } else { list.classList.remove("on"); idx = 0; arrowed = false; }
 
@@ -458,17 +494,32 @@ $("f").addEventListener("submit", e => {
   go("https://www.google.com/search?q=" + encodeURIComponent(v));
 });
 
-// ⌥1–4 opens the links, / focuses search
-const links = [...document.querySelectorAll("nav a")];
+// the links under the search bar
+function renderLinks() {
+  $("links").innerHTML = (NEWTAB.links || []).filter(l => l.url).map((l, i) =>
+    `<a href="${esc(l.url)}" style="--i:${i}">${esc(l.name || origin(l.url).replace(/^https?:\/\/(www\.)?/, ""))}</a>`).join("");
+}
+renderLinks();
+
+// ⌥1–9 opens the links, / focuses search
 addEventListener("keydown", e => {
-  if (e.altKey && /^Digit[1-4]$/.test(e.code)) { e.preventDefault(); go(links[+e.code.slice(5) - 1].href); }
+  const links = document.querySelectorAll("nav a"), n = /^Digit[1-9]$/.test(e.code) ? +e.code.slice(5) : 0;
+  if (e.altKey && n && links[n - 1]) { e.preventDefault(); go(links[n - 1].href); }
   if (e.key === "/" && document.activeElement !== $("q")) { e.preventDefault(); $("q").focus(); }
 });
 
 // ── motion layer ──
 // leave with a short lift, then navigate
-let onLeave = () => {};
+let onLeave = () => {}, refreshColors = () => {}, greetIn = () => {};
 function go(url) {
+  if (window.NEWTAB_PREVIEW) {                         // inside the builder: say where it would go, then come back
+    parent.postMessage({ type: "newtab-go", url }, "*");
+    onLeave();
+    const main = document.querySelector("main");
+    main.classList.add("leaving");
+    setTimeout(() => main.classList.remove("leaving"), 650);
+    return;
+  }
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) { location.href = url; return; }
   onLeave();
   const main = document.querySelector("main");
@@ -550,7 +601,8 @@ document.querySelector("nav").addEventListener("click", e => {
     const s = getComputedStyle(root);
     return ["--c1", "--c2", "--c3", "--base"].map(k => hex(s.getPropertyValue(k)));
   };
-  const colors = readColors();
+  const colors = readColors(), target = readColors();
+  refreshColors = () => { const c = readColors(); c.forEach((v, i) => target[i] = v); if (!gl) colors.forEach((v, i) => colors[i] = c[i]); };
   const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
   addEventListener("pointermove", e => {
     pointer.tx = (e.clientX / innerWidth - .5) * 2;
@@ -617,6 +669,7 @@ void main(){
         focusAmt += ((document.activeElement === q ? 1 : 0) - focusAmt) * ease(2.5);
         pointer.x += (pointer.tx - pointer.x) * ease(1.8);
         pointer.y += (pointer.ty - pointer.y) * ease(1.8);
+        colors.forEach((c, i) => c.forEach((v, j) => c[j] = v + (target[i][j] - v) * ease(5)));
         gl.uniform2f(u.uRes, canvas.width, canvas.height);
         gl.uniform2f(u.uP, pointer.x, pointer.y);
         gl.uniform1f(u.uT, time); gl.uniform1f(u.uE, energy); gl.uniform1f(u.uK, pulse); gl.uniform1f(u.uF, focusAmt);
@@ -630,7 +683,20 @@ void main(){
   }
 
   onLeave = () => { pulse = 1.2; };
+  greetIn = splitGreeting;
 })();
+
+// ── inside the builder: settings arrive live from the page around it ──
+if (window.NEWTAB_PREVIEW) addEventListener("message", e => {
+  if (e.source !== parent || !e.data || e.data.type !== "newtab-config") return;
+  const before = greeting(new Date());
+  Object.assign(NEWTAB, e.data.config);
+  PRIVATE = !!e.data.private;
+  applyTheme(); refreshColors(); buildEngines(); renderLinks();
+  if (mode && !engines[mode]) { q.value = ""; clearMode(); }
+  update();
+  if (greeting(new Date()) !== before || e.data.replay) { $("greet").textContent = greeting(new Date()); if (e.data.replay) greetIn(); }
+});
 </script>
 </body>
 </html>

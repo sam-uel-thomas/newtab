@@ -1,5 +1,5 @@
 #!/bin/bash
-# macOS setup — run from the repo:  ./install.sh   (asks for your password to write into Firefox.app)
+# macOS setup — run from this folder:  bash install.sh   (asks for your password to write into Firefox.app)
 # Quit Firefox (⌘Q) first. Re-run after a Firefox update if the new tab page disappears.
 set -e
 REPO="$(cd "$(dirname "$0")" && pwd)"
@@ -18,9 +18,11 @@ sudo mkdir -p "$FF/defaults/pref"
 sudo cp "$REPO/firefox/autoconfig.js" "$FF/defaults/pref/autoconfig.js"
 sed "s#__NEWTAB_URL__#$URL#" "$REPO/firefox/autoconfig.cfg" | sudo tee "$FF/autoconfig.cfg" > /dev/null
 
-# 2. toolbar styling — linked, so `git pull` updates it too
-mkdir -p "$PROFILE/chrome"
-ln -sf "$REPO/firefox/userChrome.css" "$PROFILE/chrome/userChrome.css"
+# 2. toolbar styling — linked, so `git pull` updates it too (skipped if you left it out in the builder)
+if [ -f "$REPO/firefox/userChrome.css" ]; then
+  mkdir -p "$PROFILE/chrome"
+  ln -sf "$REPO/firefox/userChrome.css" "$PROFILE/chrome/userChrome.css"
+fi
 
 # 3. preferences (only adds lines that aren't there yet)
 touch "$PROFILE/user.js"

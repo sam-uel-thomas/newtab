@@ -4,6 +4,10 @@ A calmer new tab page for Firefox — a slow, grainy orange glow, a greeting tha
 
 One HTML file, no build step, no server, works offline.
 
+## Make your own
+
+Open the **builder** (`builder/index.html`, it works straight from your disk) to pick your glow for normal and private windows, your name, your search shortcuts and links, and whether Firefox's toolbar should match. It shows the real page live as you go, then gives you a zip with everything and an installer. You can also share your look as a link.
+
 ## What it does
 
 - **Greeting by time of day** — *Good morning*, *Good afternoon*, *Good evening*, *Working late?*, *Still up?* (and *Slow morning* at weekends)
@@ -18,10 +22,12 @@ One HTML file, no build step, no server, works offline.
   | `w`  | Wikipedia |
 
   Type a single letter to see matching shortcuts (<kbd>↑</kbd><kbd>↓</kbd> + <kbd>Enter</kbd>, <kbd>Tab</kbd> or click). <kbd>Backspace</kbd> twice removes a chip, <kbd>Esc</kbd> clears. Web addresses open directly; anything else goes to Google.
-- **Keys** — <kbd>/</kbd> focuses search, <kbd>⌥/Alt</kbd>+<kbd>1–4</kbd> open the links.
+- **Keys** — <kbd>/</kbd> focuses search, <kbd>⌥/Alt</kbd>+<kbd>1–9</kbd> open the links.
 - **Toolbar restyle** (`firefox/userChrome.css`) — warm charcoal to match the page, tidied tabs on an 8pt grid, no reload button, no search-engine dropdown.
 
-## Setup
+## Setup from a clone
+
+Made a zip in the builder? Follow the steps it shows (or its `README.txt`) instead.
 
 Clone it somewhere permanent, quit Firefox, then run the installer for your machine.
 
@@ -51,10 +57,15 @@ The installer:
 
 ## Customising
 
-- Your name: `const NAME = "Sam";` in `index.html`
-- Colours and grain: the variables at the top of `index.html` (`--c1`, `--c2`, `--c3`, `--grain`) — and `--sam-base` in `userChrome.css` to match
-- Shortcuts: the `engines` list in `index.html`
-- Toolbar alignment: `--sam-align` and `--sam-fs-pad` at the top of `userChrome.css`
+Use the builder, or edit the `NEWTAB` settings block at the top of `index.html` by hand:
+
+- `name` — leave it empty for greetings without a name
+- `glow` — three colours each for normal and private windows, plus `grain`
+- `shortcuts` — `key` is what you type, `search` has `%s` where your search goes, `icon` is a built-in name (`gh yt m d w map`), a `data:image/png` URL, or left out for a letter
+- `links` — the sites under the search bar
+- Toolbar colours: `--sam-base` and friends at the top of `userChrome.css`; alignment: `--sam-align` and `--sam-fs-pad`
+
+If you change `index.html`, anything in `firefox/` or the installers, run `python3 builder/bundle.py` so the builder picks it up.: `--sam-align` and `--sam-fs-pad` at the top of `userChrome.css`
 
 ## Showcase video
 

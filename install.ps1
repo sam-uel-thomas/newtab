@@ -20,9 +20,11 @@ Copy-Item "$Repo\firefox\autoconfig.js" "$FF\defaults\pref\autoconfig.js" -Force
 $cfg = (Get-Content "$Repo\firefox\autoconfig.cfg" -Raw).Replace("__NEWTAB_URL__", $Url)
 [System.IO.File]::WriteAllText("$FF\autoconfig.cfg", $cfg, (New-Object System.Text.UTF8Encoding $false))
 
-# 2. toolbar styling
-New-Item -ItemType Directory -Force "$($Prof.FullName)\chrome" | Out-Null
-Copy-Item "$Repo\firefox\userChrome.css" "$($Prof.FullName)\chrome\userChrome.css" -Force
+# 2. toolbar styling (skipped if you left it out in the builder)
+if (Test-Path "$Repo\firefox\userChrome.css") {
+  New-Item -ItemType Directory -Force "$($Prof.FullName)\chrome" | Out-Null
+  Copy-Item "$Repo\firefox\userChrome.css" "$($Prof.FullName)\chrome\userChrome.css" -Force
+}
 
 # 3. preferences (only adds lines that aren't there yet)
 $UserJs = "$($Prof.FullName)\user.js"
