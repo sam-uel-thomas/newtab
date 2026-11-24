@@ -6,7 +6,10 @@
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts NewTab out/video.mp4 --codec=h264 --crf=18",
     "audio": "python3 audio/analyse_beats.py && python3 audio/make_sfx.py && bash audio/mix.sh",
-    "build": "npm run render && npm run audio && bash audio/mux.sh"
+    "build": "npm run render && npm run audio && bash audio/mux.sh",
+    "render:tour": "remotion render src/index.ts Tour out/tour-video.mp4 --codec=h264 --crf=18",
+    "audio:tour": "python3 audio/make_tour_audio.py",
+    "build:tour": "npm run render:tour && npm run audio:tour && ffmpeg -v error -i out/tour-video.mp4 -i audio/tour-mix.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k -shortest -movflags +faststart -y out/newtab-tour.mp4 && echo 'out/newtab-tour.mp4 ready'"
   },
   "author": "Sam Thomas",
   "dependencies": {

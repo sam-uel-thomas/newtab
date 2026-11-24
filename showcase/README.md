@@ -30,6 +30,23 @@ the frame number: the drifting glow, the cursor, the typing, the chip, the list,
   settles with a tiny overshoot and never fully stops. Shape switches arrow → I-beam → hand like macOS.
 - **Toolbar** is drawn at the real Firefox size (1440px window) from a screenshot, then scaled.
 
+## The tour (about 38 s, `src/Tour.tsx`)
+
+A second film covering everything added since: the liquid glow, the rim light on the search bar,
+chips springing in and collapsing out, the shortcut list's sliding highlight, link underlines (one
+glide over all four), the greeting through the day, the private window slid in like a new Space
+(dusky blue, the cheeky greeting, the blue tab icon),
+the VPN shield and a simple grid end card. It runs on plain output frames (no beat sync), timed by the `T`
+table at the top of the file; `audio/make_tour_audio.py` places the whooshes, pops and clicks on the
+same frames, so move a moment in both.
+
+```bash
+npm run build:tour   # → out/newtab-tour.mp4 (needs ffmpeg and numpy)
+```
+
+The music is the opening of `audio/grazing-in-the-grass.mp3`, which is gitignored: copy the track
+there on another machine before building.
+
 ## Run it
 
 ```bash
