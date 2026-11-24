@@ -61,3 +61,7 @@ The installer:
 `showcase/` is the Remotion project for the 32-second showcase film, cut to the music. See [showcase/README.md](showcase/README.md).
 
 Brand icons from [Simple Icons](https://simpleicons.org) (CC0).
+
+## License
+
+[MIT](LICENSE)

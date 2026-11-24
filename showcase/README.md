@@ -44,8 +44,7 @@ same frames, so move a moment in both.
 npm run build:tour   # → out/newtab-tour.mp4 (needs ffmpeg and numpy)
 ```
 
-The music is the opening of `audio/grazing-in-the-grass.mp3`, which is gitignored: copy the track
-there on another machine before building.
+The music is the opening of `audio/grazing-in-the-grass.mp3`.
 
 ## Run it
 
@@ -69,4 +68,9 @@ The audio steps need `ffmpeg` and Python with `librosa soundfile scipy numpy`
 - **Timing of a moment:** move its beat in `SYNC` (and the same table in `audio/make_sfx.py`).
 - **Click volume:** `volume=-7dB` in `audio/mix.sh`.
 
-The track is © its owners and is here for personal use only — keep this repo private while it's included.
+## Music
+
+The music isn't in this repo — the tracks are © their owners. To build the films, put your own copies in
+`audio/` (`manteca-funky-lowlives-remix.mp3` for the showcase, `grazing-in-the-grass.mp3` for the tour)
+or point `TRACK` in `analyse_beats.py` / `make_tour_audio.py` at another song. Any `.mp3` in `audio/` is
+gitignored.

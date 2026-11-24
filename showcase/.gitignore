@@ -3,4 +3,4 @@ out/
 *.mp4
 audio/*.wav
 audio/grid.json
-audio/grazing-in-the-grass.mp3
+audio/*.mp3
