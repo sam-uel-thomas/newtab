@@ -2,6 +2,8 @@
 #   powershell -ExecutionPolicy Bypass -File .\install.ps1
 # Close Firefox first. Re-run after `git pull` (to refresh the toolbar styling) or after a Firefox update.
 $ErrorActionPreference = "Stop"
+$Admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $Admin) { throw "Run this from an administrator PowerShell: right-click the Start button, choose Terminal (Admin), then run it again." }
 $Repo  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Url   = ([System.Uri](Join-Path $Repo "index.html")).AbsoluteUri
 $FF    = "$env:ProgramFiles\Mozilla Firefox"

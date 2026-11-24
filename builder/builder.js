@@ -58,6 +58,11 @@ const iconHTML = (icon, name, cls = "") =>
 /* ── state: everything you choose, kept in this browser only ── */
 // where tips go; the coffee section in the download sheet only shows when this is set
 const TIP_URL = "https://ko-fi.com/sammartelthomas";
+// the public builder, for share links made inside the extension
+const SITE = "https://sam-uel-thomas.github.io/newtab/builder/";
+// running as the Firefox extension's settings page: save as you go instead of downloading
+const EXT = /^(moz|chrome)-extension:$/.test(location.protocol) && !!(window.browser && browser.storage);
+if (EXT) document.documentElement.classList.add("ext");
 
 const STORE = "newtab-builder";
 const fresh = () => ({
@@ -292,7 +297,7 @@ function toggles(root) {
   const items = [
     ["toolbar", "Restyle the toolbar to match", "Warm charcoal tabs and address bar", "Firefox keeps its usual toolbar"],
     ["focus", "Start typing straight away", "New tabs put the cursor in your search bar", "New tabs start in the address bar"]
-  ];
+  ].filter(([k]) => !(EXT && k === "focus"));      // an extension can't take the cursor from the address bar
   root.innerHTML = `<div class="toggles">${items.map(([k, t]) =>
     `<button type="button" class="tg" role="switch" data-k="${k}"><span class="t">${t}<small></small></span><span class="knob" aria-hidden="true"></span></button>`).join("")}</div>`;
   root.addEventListener("click", e => { const b = e.target.closest(".tg"); if (!b) return; S[b.dataset.k] = !S[b.dataset.k]; commit(); });
@@ -568,11 +573,13 @@ function startSetup(step = 0) {
 /* ── editor ── */
 let frameReady = false, postQueued = false, pillTimer;
 let frame = $("#frame");
+const PREVIEW_URL = "../newtab.html?preview";
+if (EXT) frame.removeAttribute("sandbox");     // our own page, and extensions block inline scripts in srcdoc
 // a fresh frame each time the editor opens: a preview that sat hidden behind the setup can stop painting
 function newFrame() {
   const f = frame.cloneNode(false);
   f.removeAttribute("srcdoc"); f.style.cssText = frame.style.cssText;
-  f.addEventListener("load", () => { frameReady = !!f.srcdoc; postPreview(); });
+  f.addEventListener("load", () => { frameReady = EXT ? f.src.includes("newtab.html") : !!f.srcdoc; postPreview(); });
   frame.replaceWith(f); frame = f;
 }
 function dropFrame() { frameReady = false; frame.removeAttribute("srcdoc"); frame.src = "about:blank"; }
@@ -585,13 +592,14 @@ function enterEditor({ arriving } = {}) {
   frameReady = false;
   newFrame();
   fitFrame();
-  frame.srcdoc = pageHTML(true);
+  if (EXT) frame.src = PREVIEW_URL; else frame.srcdoc = pageHTML(true);
   openAcc(ui.open);
   commit();
   scrollTo(0, 0);
   $("#panel").scrollTop = 0;
   clearTimeout(pillTimer);
   if (arriving) {
+    if (EXT) setTimeout(() => toast("Saved. Every new tab now uses this"), 1600);
     setTimeout(() => $("#donePill").classList.add("on"), 1400);
     pillTimer = setTimeout(() => $("#donePill").classList.remove("on"), 6500);
   } else editorIntro(150);
@@ -682,16 +690,17 @@ const README = `newtab: your new tab page for Firefox
 Made with the newtab builder.
 
 Install on a Mac
-  1. Move this newtab folder somewhere it can stay, like Documents.
-     Firefox loads your page from here.
+  1. Move this newtab folder into your Documents folder.
+     Firefox loads your page from here, so leave it in place.
   2. Quit Firefox (Cmd+Q). Open Terminal and run:
        cd ~/Documents/newtab && bash install.sh
      It asks for your Mac password to add two small files to Firefox.
   3. Open Firefox and press Cmd+T.
 
 Install on Windows
-  1. Move this newtab folder somewhere it can stay, like Documents.
-  2. Close Firefox. Open PowerShell as administrator and run:
+  1. Move this newtab folder (the one with install.ps1 inside) into your
+     Documents folder. Firefox loads your page from here, so leave it in place.
+  2. Close Firefox. Right-click the Start button, choose Terminal (Admin) and run:
        cd $HOME\\Documents\\newtab; powershell -ExecutionPolicy Bypass -File .\\install.ps1
   3. Open Firefox and press Ctrl+T.
 
@@ -751,7 +760,7 @@ function shareLink() {
     s: S.shortcuts.map(({ key, name, sub, home, search, icon, alias }) => ({ key, name, sub, home, search, icon: ICONS[icon] ? icon : undefined, alias })),
     l: S.links.map(({ name, url, icon }) => ({ name, url, icon: ICONS[icon] ? icon : undefined }))
   };
-  return location.href.split("#")[0] + "#look=" + b64(JSON.stringify(look));
+  return (EXT ? SITE : location.href.split("#")[0]) + "#look=" + b64(JSON.stringify(look));
 }
 function readLook() {
   const m = location.hash.match(/look=([\w-]+)/);
@@ -786,13 +795,13 @@ let exGlow, exGreeter, lastFocus;
 const sheet = $("#sheet");
 const HOW = {
   mac: [
-    "<b>Unzip it</b> and move the <b>newtab</b> folder somewhere it can stay, like Documents. Firefox loads your page from there.",
+    "<b>Unzip it</b> and move the <b>newtab</b> folder into your <b>Documents</b> folder. Firefox loads your page from there, so leave it in place.",
     "<b>Quit Firefox</b> (⌘Q), open Terminal and run this. It asks for your Mac password to add two small files to Firefox.",
     "<b>Open Firefox</b> and press ⌘T."
   ],
   win: [
-    "<b>Unzip it</b> and move the <b>newtab</b> folder somewhere it can stay, like Documents. Firefox loads your page from there.",
-    "<b>Close Firefox</b>, open PowerShell as administrator and run this.",
+    "<b>Unzip it</b> and move the <b>newtab</b> folder with <b>install.ps1</b> inside into your <b>Documents</b> folder. Windows can unzip it as newtab\\newtab, so check you've got the inner one. Firefox loads your page from there, so leave it in place.",
+    "<b>Close Firefox</b>, right-click the Start button, choose <b>Terminal (Admin)</b> and run this.",
     "<b>Open Firefox</b> and press Ctrl+T."
   ]
 };
@@ -833,7 +842,22 @@ sheet.addEventListener("keydown", e => {
   if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f.at(-1).focus(); }
   else if (!e.shiftKey && document.activeElement === f.at(-1)) { e.preventDefault(); f[0].focus(); }
 });
-$("#openExport").addEventListener("click", openSheet);
+$("#openExport").addEventListener("click", () => EXT ? browser.tabs.create({}) : openSheet());
+
+/* ── as the extension: everything saves as you go, and every new tab follows ── */
+if (EXT) {
+  let saveExt;
+  views.push(() => {
+    clearTimeout(saveExt);
+    saveExt = setTimeout(() => {
+      const config = pageConfig();
+      try { localStorage.setItem("newtab-config", JSON.stringify(config)); } catch {}
+      browser.storage.local.set({ config, toolbar: S.toolbar });
+    }, 150);
+  });
+  $("#openExport").innerHTML = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2.5v9M2.5 7h9" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>Open a new tab';
+  $(".panel-foot .fine").innerHTML = `Saved as you go · <a href="${TIP_URL}" target="_blank" rel="noopener">Buy me a coffee</a>`;
+}
 $("#closeExport").addEventListener("click", closeSheet);
 $("#download").addEventListener("click", () => {
   const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(zip(bundleFiles())), download: "newtab.zip" });

@@ -15,8 +15,9 @@ echo "Profile:      $PROFILE"
 
 # 1. autoconfig (new tab + homepage + focus fix)
 sudo mkdir -p "$FF/defaults/pref"
-sudo cp "$REPO/firefox/autoconfig.js" "$FF/defaults/pref/autoconfig.js"
+sudo install -m 644 "$REPO/firefox/autoconfig.js" "$FF/defaults/pref/autoconfig.js"   # Firefox must be able to read it
 sed "s#__NEWTAB_URL__#$URL#" "$REPO/firefox/autoconfig.cfg" | sudo tee "$FF/autoconfig.cfg" > /dev/null
+sudo chmod 644 "$FF/autoconfig.cfg"
 
 # 2. toolbar styling — linked, so `git pull` updates it too (skipped if you left it out in the builder)
 if [ -f "$REPO/firefox/userChrome.css" ]; then

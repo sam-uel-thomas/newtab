@@ -1,3 +1,5 @@
 .DS_Store
 CLAUDE.local.md
 .claude/
+extension/dist/
+extension/newtab.xpi

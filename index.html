@@ -687,7 +687,7 @@ void main(){
 })();
 
 // ── inside the builder: settings arrive live from the page around it ──
-if (window.NEWTAB_PREVIEW) addEventListener("message", e => {
+if (window.NEWTAB_PREVIEW || window.NEWTAB_LIVE) addEventListener("message", e => {
   if (e.source !== parent || !e.data || e.data.type !== "newtab-config") return;
   const before = greeting(new Date());
   Object.assign(NEWTAB, e.data.config);

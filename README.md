@@ -34,7 +34,7 @@ Clone it somewhere permanent, quit Firefox, then run the installer for your mach
 **macOS**
 ```bash
 git clone https://github.com/sam-uel-thomas/newtab.git
-cd newtab && ./install.sh
+cd newtab && bash install.sh
 ```
 
 **Windows** (Administrator PowerShell)

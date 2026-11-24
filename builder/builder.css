@@ -622,3 +622,8 @@ body.entering .stage-bar, body.entering .browser, body.entering .panel { opacity
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; }
 }
+
+/* as the Firefox extension: no download step, so no computer picker */
+.ext .os-row { display: none; }
+.panel-foot .fine a { color: var(--accent-hi); text-decoration: none; }
+.panel-foot .fine a:hover { text-decoration: underline; }
