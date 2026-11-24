@@ -6,7 +6,7 @@ One HTML file, no build step, no server, works offline.
 
 ## Make your own
 
-Open the **builder** (`builder/index.html`, it works straight from your disk) to pick your glow for normal and private windows, your name, your search shortcuts and links, and whether Firefox's toolbar should match. It shows the real page live as you go, then gives you a zip with everything and an installer. You can also share your look as a link.
+Open the **[builder](https://sam-uel-thomas.github.io/newtab/builder/)** (or `builder/index.html` in a clone, straight from your disk) to pick your glow for normal and private windows, your name, your search shortcuts and links, and whether Firefox's toolbar should match. It shows the real page live as you go, then gives you a zip with everything and an installer. You can also share your look as a link.
 
 ## What it does
 

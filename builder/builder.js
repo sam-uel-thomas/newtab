@@ -49,8 +49,6 @@ const LINKS = [
 const SVG = {
   x: '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
   plus: '<svg class="plus" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1.5v7M1.5 5h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
-  image: '<svg viewBox="0 0 28 28" aria-hidden="true"><rect x="3" y="5" width="22" height="18" rx="4" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 20l6-6 5 5 3-3 6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><circle cx="19" cy="11" r="2" fill="currentColor"/></svg>',
-  redo: '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M8.2 5A3.2 3.2 0 1 1 7.2 2.7M8.2 1.2v1.9H6.3" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 const iconHTML = (icon, name, cls = "") =>
   ICONS[icon] ? `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[icon]}"/></svg>`
@@ -63,7 +61,6 @@ const fresh = () => ({
   v: 1, name: "", grain: .4, shortcuts: [], links: [], toolbar: true, focus: true, done: false,
   glow: { normal: [...PRESETS[0].c], private: [...PRESETS[1].c] },
   preset: { normal: "ember", private: "dusk" },
-  wall: { normal: null, private: null },
   os: /Win/i.test(navigator.userAgent) ? "win" : "mac"
 });
 function load() {
@@ -79,18 +76,6 @@ const commit = (o = {}) => { save(); views.forEach(v => v(o)); };
 
 /* ── colour helpers ── */
 const hex3 = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
-function hsl(r, g, b) {
-  r /= 255; g /= 255; b /= 255;
-  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
-  if (!d) return [0, 0, l];
-  const s = d / (1 - Math.abs(2 * l - 1));
-  const h = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
-  return [h * 60, s, l];
-}
-function hslHex(h, s, l) {
-  const f = n => { const k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); };
-  return "#" + [f(0), f(8), f(4)].map(v => v.toString(16).padStart(2, "0")).join("");
-}
 const swatch = c => `radial-gradient(circle at 70% 25%, ${c[1]}, ${c[0]} 55%, ${c[2]})`;
 const paintRoot = c => ["--c1", "--c2", "--c3"].forEach((k, i) => document.documentElement.style.setProperty(k, c[i]));
 
@@ -267,37 +252,6 @@ async function loadImage(file) {
   try { await img.decode(); return img; } finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
 }
 
-/* the glow from a wallpaper: cluster its colours, keep the vivid ones */
-async function paletteFrom(file) {
-  const img = await loadImage(file), c = document.createElement("canvas"); c.width = c.height = 48;
-  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(img, 0, 0, 48, 48);
-  const d = x.getImageData(0, 0, 48, 48).data, px = [];
-  for (let i = 0; i < d.length; i += 4) { const [, s, l] = hsl(d[i], d[i + 1], d[i + 2]); px.push([d[i], d[i + 1], d[i + 2], s, l]); }
-  let pool = px.filter(p => p[3] > .22 && p[4] > .1 && p[4] < .9);
-  if (pool.length < 80) pool = px;
-  const k = 5; let cent = Array.from({ length: k }, (_, i) => pool[Math.floor((i + .5) * pool.length / k)].slice(0, 3)), groups;
-  for (let it = 0; it < 10; it++) {
-    groups = cent.map(() => []);
-    for (const p of pool) {
-      let bi = 0, bd = Infinity;
-      cent.forEach((m, i) => { const dd = (p[0] - m[0]) ** 2 + (p[1] - m[1]) ** 2 + (p[2] - m[2]) ** 2; if (dd < bd) { bd = dd; bi = i; } });
-      groups[bi].push(p);
-    }
-    cent = groups.map((g, i) => g.length ? [0, 1, 2].map(j => g.reduce((a, p) => a + p[j], 0) / g.length) : cent[i]);
-  }
-  const cl = cent.map((m, i) => { const [h, s, l] = hsl(...m); return { h, s, l, w: groups[i].length * (.35 + s) }; })
-    .filter(q => q.w > 0).sort((a, b) => b.w - a.w);
-  const main = cl[0];
-  const hi = cl.slice(1).filter(q => q.l > main.l + .04).sort((a, b) => b.w - a.w)[0];
-  const lo = cl.slice(1).filter(q => q !== hi && q.l < main.l + .02).sort((a, b) => b.w - a.w)[0];
-  const tone = (q, dl) => hslHex(q.h, Math.min(.95, Math.max(q.s, .42)), Math.min(.66, Math.max(.24, q.l + dl)));
-  return [
-    tone(main, 0),
-    hi ? tone(hi, .02) : hslHex((main.h + 10) % 360, Math.min(1, Math.max(main.s, .42) + .05), Math.min(.74, main.l + .15)),
-    lo ? tone(lo, -.04) : hslHex((main.h + 350) % 360, Math.max(main.s, .42), Math.max(.18, main.l - .13))
-  ];
-}
-
 async function iconFrom(file) {
   const img = await loadImage(file), c = document.createElement("canvas"); c.width = c.height = 64;
   const w = img.naturalWidth || 64, h = img.naturalHeight || 64, r = Math.min(64 / w, 64 / h);
@@ -305,44 +259,21 @@ async function iconFrom(file) {
   return c.toDataURL("image/png");
 }
 
-/* ── presets: five glows and your wallpaper, with a ring that slides to the choice ── */
+/* ── presets: five glows, with a ring that slides to the choice ── */
 function presets(root, getWin, onPick) {
-  const file = Object.assign(document.createElement("input"), { type: "file", accept: "image/*", hidden: true });
-  root.after(file);
   root.innerHTML = PRESETS.map(p =>
     `<button type="button" class="preset" role="radio" data-id="${p.id}" style="--a:${p.c[0]};--b:${p.c[1]};--c:${p.c[2]}"><span class="sw"></span><span>${p.name}</span></button>`).join("")
-    + `<button type="button" class="preset wall" role="radio" data-id="wallpaper" aria-label="Colours from your wallpaper"><span class="sw"></span><span>Wallpaper</span></button><span class="ring" aria-hidden="true"></span>`;
-  const ring = $(".ring", root), wall = $(".wall", root);
+    + `<span class="ring" aria-hidden="true"></span>`;
+  const ring = $(".ring", root);
   root.addEventListener("click", e => {
     const b = e.target.closest(".preset"); if (!b) return;
-    const win = getWin();
-    if (b.dataset.id === "wallpaper") {
-      if (!S.wall[win] || e.target.closest(".redo")) return file.click();
-      S.glow[win] = [...S.wall[win]]; S.preset[win] = "wallpaper";
-    } else {
-      const p = PRESETS.find(p => p.id === b.dataset.id);
-      S.glow[win] = [...p.c]; S.preset[win] = p.id;
-    }
+    const win = getWin(), p = PRESETS.find(p => p.id === b.dataset.id);
+    S.glow[win] = [...p.c]; S.preset[win] = p.id;
     onPick(); commit();
   });
-  file.addEventListener("change", async () => {
-    const f = file.files[0]; file.value = ""; if (!f) return;
-    const win = getWin(), busy = Object.assign(document.createElement("span"), { className: "busy" });
-    $(".sw", wall).append(busy);
-    try {
-      const pal = await paletteFrom(f);
-      S.wall[win] = pal; S.glow[win] = [...pal]; S.preset[win] = "wallpaper";
-      onPick(1); commit(); toast("Colours taken from your wallpaper");
-    } catch { toast("Couldn't read that image. Try a JPG or PNG"); }
-    finally { busy.remove(); }
-  });
   const place = () => {
-    const win = getWin(), id = S.preset[win], w = S.wall[win], sw = $(".sw", wall);
+    const id = S.preset[getWin()];
     $$(".preset", root).forEach(b => b.setAttribute("aria-checked", b.dataset.id === id));
-    if (w) {
-      wall.style.cssText = `--a:${w[0]};--b:${w[1]};--c:${w[2]}`;
-      if (sw.classList.contains("empty")) { sw.className = "sw"; sw.innerHTML = `<span class="redo" title="Use another image">${SVG.redo}</span>`; }
-    } else if (!sw.classList.contains("empty")) { wall.style.cssText = ""; sw.className = "sw empty"; sw.innerHTML = SVG.image; }
     const b = $(`.preset[data-id="${id}"]`, root), s = b && $(".sw", b);
     if (!s || !s.offsetWidth) return ring.classList.remove("on");
     ring.style.width = s.offsetWidth + 6 + "px"; ring.style.height = s.offsetHeight + 6 + "px";
@@ -356,56 +287,57 @@ function presets(root, getWin, onPick) {
 /* ── switches ── */
 function toggles(root) {
   const items = [
-    ["toolbar", "Restyle the toolbar to match", "Warm charcoal tabs and address bar"],
-    ["focus", "Start typing straight away", "New tabs put the cursor in your search bar, not the address bar"]
+    ["toolbar", "Restyle the toolbar to match", "Warm charcoal tabs and address bar", "Firefox keeps its usual toolbar"],
+    ["focus", "Start typing straight away", "New tabs put the cursor in your search bar", "New tabs start in the address bar"]
   ];
-  root.innerHTML = `<div class="toggles">${items.map(([k, t, s]) =>
-    `<button type="button" class="tg" role="switch" data-k="${k}"><span class="t">${t}<small>${s}</small></span><span class="knob" aria-hidden="true"></span></button>`).join("")}</div>`;
+  root.innerHTML = `<div class="toggles">${items.map(([k, t]) =>
+    `<button type="button" class="tg" role="switch" data-k="${k}"><span class="t">${t}<small></small></span><span class="knob" aria-hidden="true"></span></button>`).join("")}</div>`;
   root.addEventListener("click", e => { const b = e.target.closest(".tg"); if (!b) return; S[b.dataset.k] = !S[b.dataset.k]; commit(); });
-  views.push(() => $$(".tg", root).forEach(b => b.setAttribute("aria-checked", !!S[b.dataset.k])));
+  views.push(() => $$(".tg", root).forEach((b, i) => {
+    const on = !!S[b.dataset.k], small = $("small", b), text = items[i][on ? 2 : 3];
+    b.setAttribute("aria-checked", on);
+    if (small.textContent !== text) {
+      const first = !small.textContent; small.textContent = text;
+      if (!first) anim(small, [{ opacity: 0, transform: "translateY(3px)" }, { opacity: 1, transform: "none" }], { duration: 400, easing: OUT });
+    }
+  }));
 }
 
-/* ── shortcuts and links: what you've added, suggestions, and your own ── */
+/* ── shortcuts and links: one set of chips you switch on and off, plus your own ── */
 function sites(root, getKind) {
   root.innerHTML = `
-    <div class="collapse empty-wrap"><div><div class="empty"></div></div></div>
-    <div class="list" role="list"></div>
-    <p class="sugg-label">Suggestions</p>
-    <div class="chips"></div>
+    <div class="collapse open chips-wrap"><div><div class="chips" role="group"></div></div></div>
     <div class="collapse custom"><div>
       <form class="custom-in" novalidate>
-        <div class="pair">
-          <label class="lab">Name<input class="input sm" name="name" maxlength="24" autocomplete="off" placeholder="Name"></label>
-          <label class="lab k">Shortcut<input class="input sm" name="key" maxlength="4" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ab"></label>
+        <div class="row">
+          <button type="button" class="icon-pick k" aria-label="Icon, optional: pick a square PNG"><span class="ico"></span></button>
+          <input class="input sm" name="name" maxlength="24" autocomplete="off" aria-label="Name" placeholder="Name">
+          <input class="input sm k key" name="key" maxlength="4" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Shortcut letters" placeholder="Shortcut">
         </div>
-        <label class="lab"><span class="url-l"></span><input class="input sm" name="url" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-        <p class="fine k">Search the site once, copy the address, and swap your search words for %s.</p>
+        <div class="row wrap">
+          <input class="input sm url" name="url" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <span class="acts"><button type="button" class="btn quiet" data-cancel>Cancel</button><button type="submit" class="btn raised quiet">Add</button></span>
+        </div>
         <p class="err" role="alert" hidden></p>
-        <div class="foot">
-          <button type="button" class="icon-pick k"><span class="ico"></span><span class="ip-l">Icon</span></button>
-          <span class="fine k">Optional PNG</span>
-          <span style="flex:1"></span>
-          <button type="button" class="btn quiet" data-cancel>Cancel</button>
-          <button type="submit" class="btn raised quiet">Add</button>
-        </div>
         <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
       </form>
     </div></div>`;
-  const emptyWrap = $(".empty-wrap", root), empty = $(".empty", root), list = $(".list", root), chips = $(".chips", root);
-  const custom = $(".custom", root), form = $("form", root), err = $(".err", root), file = $("input[type=file]", root);
+  const chipsWrap = $(".chips-wrap", root), chips = $(".chips", root), custom = $(".custom", root);
+  const form = $("form", root), err = $(".err", root), file = $("input[type=file]", root);
   let open = false, icon = null, lastKind = null;
   const keysOf = () => getKind() === "keys";
-  const idOf = (it, keys = keysOf()) => keys ? "k:" + it.key : "l:" + it.url;
+  const same = (a, b, keys) => keys ? a.key === b.key && a.search === b.search : a.url === b.url;
 
   const setOpen = v => {
-    open = v; custom.classList.toggle("open", v); custom.inert = !v;
-    const own = $(".own", chips); if (own) own.classList.toggle("open", v), own.setAttribute("aria-expanded", v);
-    if (v) setTimeout(() => form.elements.name.focus({ preventScroll: true }), 60);
-    else { form.reset(); icon = null; err.hidden = true; paintIcon(); }
+    open = v;
+    custom.classList.toggle("open", v); custom.inert = !v;
+    chipsWrap.classList.toggle("open", !v); chipsWrap.inert = v;
+    if (v) setTimeout(() => form.elements.name.focus({ preventScroll: true }), 80);
+    else { form.reset(); icon = null; err.hidden = true; paintIcon(); $$(".bad", form).forEach(i => i.classList.remove("bad")); }
   };
   const paintIcon = () => {
-    $(".icon-pick .ico", form).innerHTML = iconHTML(icon, form.elements.name.value || "?");
-    $(".ip-l", form).textContent = icon ? "Change icon" : "Icon";
+    $(".icon-pick .ico", form).innerHTML = icon ? iconHTML(icon, "") : iconHTML(null, form.elements.name.value || "+");
+    $(".icon-pick", form).title = icon ? "Change the icon" : "Add an icon (optional PNG)";
   };
   const bad = (input, msg) => {
     err.textContent = msg; err.hidden = false;
@@ -418,8 +350,8 @@ function sites(root, getKind) {
     const f = file.files[0]; file.value = ""; if (!f) return;
     try { icon = await iconFrom(f); paintIcon(); } catch { toast("Couldn't read that image"); }
   });
-  $("[data-cancel]", form).addEventListener("click", () => setOpen(false));
-  form.addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); $(".own", chips)?.focus(); } });
+  $("[data-cancel]", form).addEventListener("click", () => { setOpen(false); setTimeout(() => $(".own", chips)?.focus({ preventScroll: true }), 80); });
+  form.addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); $("[data-cancel]", form).click(); } });
   form.addEventListener("submit", e => {
     e.preventDefault();
     const f = form.elements, name = f.name.value.trim();
@@ -439,41 +371,29 @@ function sites(root, getKind) {
     } else {
       if (!url) return bad(f.url, "Add the address");
       try { new URL(url); } catch { return bad(f.url, "That address doesn't look right"); }
+      if (S.links.some(l => l.url === url)) return bad(f.url, "That link is already there");
       S.links.push({ name: name || hostOf(url), url });
     }
-    setOpen(false); commit({ added: true });
+    setOpen(false); commit();
   });
 
-  const row = (it, keys) => {
-    const el = document.createElement("div");
-    el.className = "item"; el.setAttribute("role", "listitem");
-    el.innerHTML = `<span class="ico">${iconHTML(it.icon, it.name)}</span>
-      <span class="nm"><b>${esc(it.name)}</b><small>${esc(keys ? hostOf(it.search) : hostOf(it.url))}</small></span>
-      ${keys ? `<span class="tok">${esc(it.key)}</span>` : ""}
-      <button type="button" class="x" aria-label="Remove ${esc(it.name)}">${SVG.x}</button>`;
-    $(".x", el).addEventListener("click", () => {
-      const next = el.nextElementSibling || el.previousElementSibling;
-      if (keys) S.shortcuts = S.shortcuts.filter(s => s !== it); else S.links = S.links.filter(l => l !== it);
-      commit();
-      (next && $(".x", next) || $(".chip", chips))?.focus({ preventScroll: true });
-    });
-    return el;
+  const toggle = (it, keys) => {
+    const list = keys ? S.shortcuts : S.links, i = list.findIndex(x => same(x, it, keys));
+    if (i >= 0) list.splice(i, 1);
+    else if (keys && list.some(s => s.key === it.key)) return toast(`“${it.key}” is already one of your shortcuts`);
+    else list.push({ ...it });
+    commit();
   };
-  const chip = (p, keys) => {
+  const chip = (e, keys) => {
     const el = document.createElement("button");
-    el.type = "button"; el.className = "chip";
-    el.innerHTML = `${iconHTML(p.icon, p.name, "ci")}${esc(p.name)}${SVG.plus}`;
-    el.setAttribute("aria-label", `Add ${p.name}`);
-    el.addEventListener("click", () => {
-      if (keys && S.shortcuts.some(s => s.key === p.key)) return toast(`You already use “${p.key}”`);
-      (keys ? S.shortcuts : S.links).push({ ...p });
-      commit({ added: true });
-    });
+    el.type = "button"; el.className = "chip"; el.dataset.key = e.id;
+    el.innerHTML = `<span class="cic">${iconHTML(e.item.icon, e.item.name, "ci")}</span><span class="cn">${esc(e.item.name)}</span>`
+      + (keys ? `<span class="ctok">${esc(e.item.key)}</span>` : "") + SVG.plus;
+    el.addEventListener("click", () => toggle(e.item, keys));
     return el;
   };
-
   const flip = (box, mutate) => {
-    const kids = [...box.children], before = new Map(kids.map(k => [k, k.getBoundingClientRect()]));
+    const before = new Map([...box.children].map(k => [k, k.getBoundingClientRect()]));
     mutate();
     [...box.children].forEach(k => {
       const a = before.get(k); if (!a) return;
@@ -482,72 +402,65 @@ function sites(root, getKind) {
     });
   };
 
-  const render = o => {
+  const render = () => {
     const kind = getKind(), keys = kind === "keys", items = keys ? S.shortcuts : S.links, pool = keys ? SHORTCUTS : LINKS;
-    const switched = lastKind && kind !== lastKind, first = !lastKind;
+    const switched = lastKind && kind !== lastKind, quiet = !lastKind || switched, first = !lastKind;
     lastKind = kind;
+    // whatever changes below, the height glides to its new size instead of jumping
+    const h0 = root.offsetHeight;
+    const settle = () => {
+      const h1 = root.offsetHeight;
+      if (first || !h0 || !h1 || h0 === h1 || still) return;
+      root.getAnimations().filter(a => a.id === "h").forEach(a => a.cancel());
+      Object.assign(root.style, { overflow: "clip", overflowClipMargin: "8px" });
+      const a = root.animate([{ height: h0 + "px" }, { height: h1 + "px" }], { duration: 560, easing: OUT });
+      a.id = "h";
+      a.finished.then(() => { root.style.overflow = ""; root.style.overflowClipMargin = ""; }, () => {});
+    };
     if (switched) {
-      list.innerHTML = ""; chips.innerHTML = ""; setOpen(false);
+      chips.textContent = ""; if (open) setOpen(false);
       anim(root, [{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 500, easing: OUT });
     }
-    const quiet = first || switched;
-    empty.textContent = keys ? "No shortcuts yet. Plain searches go to Google." : "No links yet. Add the sites you open most.";
-    emptyWrap.classList.toggle("open", !items.length);
-    $(".url-l", form).textContent = keys ? "Search address" : "Address";
-    form.elements.url.placeholder = keys ? "https://example.com/search?q=%s" : "https://example.com";
+    form.elements.url.placeholder = keys ? "Search address, with %s for your search" : "Address, like example.com";
+    form.elements.url.setAttribute("aria-label", keys ? "Search address, with %s where your search words go" : "Address");
     form.elements.name.placeholder = keys ? "Name" : "Name (optional)";
     $$(".k", form).forEach(k => k.hidden = !keys);
 
-    // the list, keyed so rows slide in and out
-    const have = new Map($$(":scope > [data-key]:not([data-leaving])", list).map(el => [el.dataset.key, el]));
-    const want = new Set(items.map(it => idOf(it, keys)));
-    for (const [k, el] of have) if (!want.has(k)) {
-      el.dataset.leaving = 1;
-      anim(el, [{ height: el.offsetHeight + "px", opacity: 1 }, { height: "0px", opacity: 0, transform: "translateX(-8px)" }], { duration: 380, easing: OUT, fill: "forwards" })
-        .finished.then(() => el.remove());
-      if (still) el.remove();
-    }
-    let prev = null;
-    items.forEach(it => {
-      const k = idOf(it, keys); let el = have.get(k);
-      if (!el) {
-        el = row(it, keys); el.dataset.key = k;
-        if (!quiet) anim(el, [{ height: "0px", opacity: 0, transform: "translateY(-6px)" }, { height: "44px", opacity: 1, transform: "none" }], { duration: 520, easing: OUT });
-      }
-      if (prev ? prev.nextElementSibling !== el : list.firstElementChild !== el) prev ? prev.after(el) : list.prepend(el);
-      prev = el;
-    });
-
-    // suggestions
-    const added = new Set(items.map(it => idOf(it, keys)));
-    const wantChips = pool.filter(p => !added.has(idOf(p, keys)));
-    const haveChips = new Map($$(":scope > [data-key]", chips).map(el => [el.dataset.key, el]));
-    const gone = [...haveChips].filter(([k]) => !wantChips.some(p => idOf(p, keys) === k)).map(([, el]) => el);
-    const newChips = wantChips.filter(p => !haveChips.has(idOf(p, keys)));
+    // suggestions keep their place and switch on and off; your own sit after them
+    const entries = [
+      ...pool.map(p => ({ id: keys ? "k:" + p.key : "l:" + p.url, item: p, on: items.some(it => same(it, p, keys)) })),
+      ...items.filter(it => !pool.some(p => same(it, p, keys))).map(it => ({ id: "c:" + (keys ? it.key : it.url), item: it, on: true }))
+    ];
+    const have = new Map($$(":scope > [data-key]", chips).map(el => [el.dataset.key, el]));
+    const gone = [...have].filter(([k]) => !entries.some(e => e.id === k)).map(([, el]) => el);
     const place = () => {
       gone.forEach(el => el.remove());
-      let prevC = null;
-      wantChips.forEach(p => {
-        const k = idOf(p, keys); let el = haveChips.get(k);
-        if (!el) { el = chip(p, keys); el.dataset.key = k; if (!quiet) anim(el, [{ opacity: 0, transform: "scale(.85)" }, { opacity: 1, transform: "none" }], { duration: 450, easing: SPRING }); }
-        if (prevC ? prevC.nextElementSibling !== el : chips.firstElementChild !== el) prevC ? prevC.after(el) : chips.prepend(el);
-        prevC = el;
+      let prev = null;
+      entries.forEach(e => {
+        let el = have.get(e.id);
+        if (!el) {
+          el = chip(e, keys);
+          if (!quiet) anim(el, [{ opacity: 0, transform: "scale(.8)" }, { opacity: 1, transform: "none" }], { duration: 500, easing: SPRING });
+        }
+        el.setAttribute("aria-pressed", e.on);
+        el.setAttribute("aria-label", `${e.item.name}${keys ? `, shortcut ${e.item.key}` : ""}`);
+        if (prev ? prev.nextElementSibling !== el : chips.firstElementChild !== el) prev ? prev.after(el) : chips.prepend(el);
+        prev = el;
       });
       let own = $(".own", chips);
       if (!own) {
-        own = document.createElement("button"); own.type = "button"; own.className = "chip own"; own.dataset.own = 1;
-        own.setAttribute("aria-expanded", "false");
-        own.addEventListener("click", () => setOpen(!open));
-        chips.append(own);
+        own = document.createElement("button"); own.type = "button"; own.className = "chip own";
+        own.textContent = "+ Your own";
+        own.addEventListener("click", () => setOpen(true));
       }
-      own.textContent = keys ? "+ Your own shortcut" : "+ Your own link";
-      own.classList.toggle("open", open);
+      own.setAttribute("aria-label", keys ? "Add your own shortcut" : "Add your own link");
       chips.append(own);
+      settle();
     };
     if (gone.length && !quiet && !still) {
-      gone.forEach(el => { el.dataset.leaving = 1; anim(el, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.8)" }], { duration: 180, easing: IN, fill: "forwards" }); });
+      gone.forEach(el => anim(el, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.8)" }], { duration: 180, easing: IN, fill: "forwards" }));
       setTimeout(() => flip(chips, place), 170);
-    } else if (newChips.length || gone.length || quiet || !$(".own", chips)) place();
+    } else place();
   };
   custom.inert = true;
   views.push(render);
@@ -571,6 +484,7 @@ function renderSetup() {
   cardGlow.set(colors); paintRoot(colors);
   card.classList.toggle("is-private", priv);
   card.classList.toggle("with-chrome", st >= 4);
+  card.classList.toggle("plain", st >= 4 && !S.toolbar);
   $("#extra").classList.toggle("open", st >= 3);
   greeter.show(dayPart(priv), S.name.trim(), st === 2 && !S.name.trim());
   syncMini($("#toks"), S.shortcuts.slice(0, 3).map(s => s.key), "mtok");
@@ -712,7 +626,7 @@ function openAcc(id) {
 }
 $$(".acc-h").forEach(h => h.addEventListener("click", () => { const id = h.parentElement.dataset.acc; openAcc(ui.open === id ? null : id); }));
 
-const presetName = win => ({ wallpaper: "Wallpaper", custom: "Custom" })[S.preset[win]] || PRESETS.find(p => p.id === S.preset[win])?.name || "Custom";
+const presetName = win => ({ custom: "Custom" })[S.preset[win]] || PRESETS.find(p => p.id === S.preset[win])?.name || "Custom";
 function renderEditor() {
   if (!ui.editor) return;
   const win = ui.preview, colors = S.glow[win];

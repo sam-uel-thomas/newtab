@@ -28,7 +28,10 @@
     <div class="card" id="card">
       <div class="card-chrome" aria-hidden="true">
         <div class="cc-tabs"><i></i><i></i><i></i><span class="cc-tab"><span class="orb"></span>New Tab</span></div>
-        <div class="cc-nav"><span class="cc-url">Search or enter address</span></div>
+        <div class="cc-nav">
+          <span class="cc-btns"><svg viewBox="0 0 14 14"><path d="M9 2.5L4.5 7 9 11.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><svg viewBox="0 0 14 14" style="opacity:.4"><path d="M5 2.5L9.5 7 5 11.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><svg viewBox="0 0 14 14"><path d="M11.5 7a4.5 4.5 0 1 1-1.3-3.2M11.5 2v2.5H9" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="cc-url"><span class="cc-engine"><b>G</b><svg viewBox="0 0 8 8"><path d="M1.5 3l2.5 2.5L6.5 3" stroke="currentColor" fill="none" stroke-width="1.2"/></svg></span><span>Search or enter address</span></span>
+        </div>
       </div>
       <div class="card-stage">
         <div class="mesh" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -68,7 +71,7 @@
 
         <section class="step" data-step="1" aria-labelledby="h1">
           <h2 id="h1">Pick a glow</h2>
-          <p class="lede">The soft light behind your new tab. Private windows get their own, so you can always tell them apart.</p>
+          <p class="lede">The soft light behind your new tab. Private windows get their own.</p>
           <div class="seg-ctl gap" id="winCtl" role="tablist" aria-label="Window type">
             <span class="ind"></span>
             <button type="button" role="tab" data-v="normal"><span class="wdot" data-dot="normal"></span>Normal windows</button>
@@ -87,7 +90,7 @@
 
         <section class="step" data-step="3" aria-labelledby="h3">
           <h2 id="h3">Your sites</h2>
-          <p class="lede">Add the sites you use. Type a shortcut's letters, then Space, to search that site. Links sit under the search bar.</p>
+          <p class="lede">Type a shortcut, then Space, to search that site from your new tab.</p>
           <div class="seg-ctl gap" id="sitesCtl" role="tablist" aria-label="Shortcuts or links">
             <span class="ind"></span>
             <button type="button" role="tab" data-v="keys">Search shortcuts <span class="n" data-n="keys"></span></button>
@@ -98,7 +101,7 @@
 
         <section class="step" data-step="4" aria-labelledby="h4">
           <h2 id="h4">Make Firefox match</h2>
-          <p class="lede">Firefox's own toolbar can take on the same warm charcoal, so the page and the browser feel like one thing.</p>
+          <p class="lede">Firefox's own toolbar can take on the same warm charcoal.</p>
           <div id="setupToggles"></div>
           <div class="os-row"><span>Your computer</span>
             <div class="seg-ctl sm" data-os role="radiogroup" aria-label="Your computer">
