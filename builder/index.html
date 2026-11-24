@@ -228,26 +228,45 @@
 
 <!-- ── download ── -->
 <div class="sheet" id="sheet" aria-hidden="true">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="exH">
+  <div class="modal ex" role="dialog" aria-modal="true" aria-labelledby="exH">
     <button type="button" class="btn x close" id="closeExport" aria-label="Close"><svg viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
-    <div class="card" id="exCard">
-      <div class="card-stage">
-        <div class="mesh" aria-hidden="true"><i></i><i></i><i></i></div>
-        <canvas aria-hidden="true"></canvas>
-        <div class="vig" aria-hidden="true"></div>
-        <div class="grain" aria-hidden="true"></div>
-        <div class="card-content"><div class="greet" id="exGreet"></div></div>
+    <div class="ex-main">
+      <div class="card" id="exCard">
+        <div class="card-stage">
+          <div class="mesh" aria-hidden="true"><i></i><i></i><i></i></div>
+          <canvas aria-hidden="true"></canvas>
+          <div class="vig" aria-hidden="true"></div>
+          <div class="grain" aria-hidden="true"></div>
+          <div class="card-content"><div class="greet" id="exGreet"></div></div>
+        </div>
+      </div>
+      <div class="body">
+        <h2 id="exH">Your new tab is ready</h2>
+        <p class="lede">Download it, run the installer once, and every new tab is yours.</p>
+        <button type="button" class="btn primary big wide" id="download">
+          <span class="swap">
+            <span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2v7M4 6.5L7 9.5l3-3M2.5 12h9" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Download newtab.zip</span>
+            <span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.5l2.6 2.6L11 4.5" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Downloaded · download again</span>
+          </span>
+        </button>
+        <div class="tip" id="tip" hidden>
+          <span class="cup" aria-hidden="true">
+            <svg viewBox="0 0 32 32">
+              <path class="steam s1" d="M12 9c-1.5-1.6 1.5-3 0-4.6"/>
+              <path class="steam s2" d="M16.5 9c-1.5-1.6 1.5-3 0-4.6"/>
+              <path d="M7.5 13h15v6.5a6 6 0 0 1-6 6h-3a6 6 0 0 1-6-6z"/>
+              <path d="M22.5 15h1.5a3 3 0 0 1 0 6h-1.9"/>
+            </svg>
+          </span>
+          <div class="tip-t">
+            <h3 id="tipTitle">Enjoying it?</h3>
+            <p class="fine">It's free, and it'll stay that way. If it made your browser a little calmer, you can buy me a coffee.</p>
+          </div>
+          <a class="btn raised" id="tipLink" target="_blank" rel="noopener">Buy me a coffee</a>
+        </div>
       </div>
     </div>
-    <div class="body">
-      <h2 id="exH">Your new tab is ready</h2>
-      <p class="lede">Download it, run the installer once, and every new tab is yours.</p>
-      <button type="button" class="btn primary big wide" id="download">
-        <span class="swap">
-          <span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2v7M4 6.5L7 9.5l3-3M2.5 12h9" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Download newtab.zip</span>
-          <span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.5l2.6 2.6L11 4.5" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Downloaded · download again</span>
-        </span>
-      </button>
+    <div class="ex-side">
       <div class="os">
         <h3>Install</h3>
         <div class="seg-ctl sm" data-os role="radiogroup" aria-label="Your computer">
@@ -257,26 +276,11 @@
         </div>
       </div>
       <ol class="how" id="how"></ol>
-      <p class="fine" style="margin-top:14px">If a Firefox update ever resets your new tab, run the installer again.</p>
+      <p class="fine how-note">If a Firefox update ever resets your new tab, run the installer again.</p>
       <div class="share">
         <h3>Share your look</h3>
-        <p class="fine">The link holds your colours, shortcuts and links, so anyone who opens it starts from your setup. Your name isn't included.</p>
+        <p class="fine">Your colours, shortcuts and links in one link. Your name isn't included.</p>
         <div class="code share-code"><span id="shareUrl"></span><button type="button" class="btn" data-share><span class="swap"><span>Copy</span><span>Copied</span></span></button></div>
-      </div>
-      <div class="tip" id="tip" hidden>
-        <span class="cup" aria-hidden="true">
-          <svg viewBox="0 0 32 32">
-            <path class="steam s1" d="M12 9c-1.5-1.6 1.5-3 0-4.6"/>
-            <path class="steam s2" d="M16.5 9c-1.5-1.6 1.5-3 0-4.6"/>
-            <path d="M7.5 13h15v6.5a6 6 0 0 1-6 6h-3a6 6 0 0 1-6-6z"/>
-            <path d="M22.5 15h1.5a3 3 0 0 1 0 6h-1.9"/>
-          </svg>
-        </span>
-        <div class="tip-t">
-          <h3 id="tipTitle">Enjoying it?</h3>
-          <p class="fine">newtab is free, and it'll stay that way. If it made your browser a little calmer, you can buy me a coffee.</p>
-        </div>
-        <a class="btn raised" id="tipLink" target="_blank" rel="noopener">Buy me a coffee</a>
       </div>
     </div>
   </div>

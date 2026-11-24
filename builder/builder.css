@@ -226,7 +226,7 @@ kbd {
 .card.is-private .badge { opacity: 1; transform: none; }
 
 /* greeting: words rise into place, like the page */
-.greet { font-size: 24px; font-weight: 400; letter-spacing: -.02em; line-height: 1.2; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.greet { font-size: clamp(19px, 4.2vw, 24px); font-weight: 400; letter-spacing: -.02em; line-height: 1.2; white-space: nowrap; }
 .greet .w { display: inline-block; overflow: hidden; vertical-align: top; padding: .14em .03em; margin: -.14em -.03em; }
 .greet .w > span { display: inline-block; animation: wordUp .9s var(--out) both; animation-delay: calc(var(--n) * 55ms); }
 .greet .gname { white-space: pre; }
@@ -526,7 +526,8 @@ body.entering .stage-bar, body.entering .browser, body.entering .panel { opacity
 }
 .sheet.open { opacity: 1; visibility: visible; transition: opacity .5s var(--out); }
 .sheet .modal {
-  width: min(600px, 100%); transform: translateY(28px) scale(.97); filter: blur(8px);
+  width: min(600px, 100%);
+  max-height: calc(100vh - 48px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; transform: translateY(28px) scale(.97); filter: blur(8px);
   transition: transform .8s var(--out), filter .8s var(--out);
 }
 .sheet.open .modal { transform: none; filter: none; }
@@ -627,3 +628,17 @@ body.entering .stage-bar, body.entering .browser, body.entering .panel { opacity
 .ext .os-row { display: none; }
 .panel-foot .fine a { color: var(--accent-hi); text-decoration: none; }
 .panel-foot .fine a:hover { text-decoration: underline; }
+
+/* download sheet layout */
+.sheet .modal.ex { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.ex-side { padding: 20px; border-radius: 12px; background: var(--lift); }
+.ex-side .os { margin-top: 0; }
+.ex-side .code, .ex-side .how li::before { background: var(--bg); }
+.how-note { margin-top: 14px; }
+.ex .tip { margin-top: 16px; }
+.ex .share { margin-top: 20px; padding-top: 18px; }
+.ex-main .body { padding-bottom: 12px; }
+@media (min-width: 900px) {
+  .sheet .modal.ex { width: min(980px, 100%); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .ex-side .os { padding-right: 40px; }
+}
